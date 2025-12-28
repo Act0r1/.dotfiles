@@ -1,0 +1,93 @@
+font-family="Comic Mono"
+# font-family="FiraCode Nerd Font Mono SemBd"
+
+
+# theme=ChallengerDeep
+# theme=Dracula
+# theme=Github-Dark-Colorblind
+# theme=Horizon
+theme=tokyonight
+font-size=17
+# theme=Cyberdyne
+# theme=Dracula
+scrollbar=never
+shell-integration = fish
+# keybindings
+keybind = cmd+s>r=reload_config
+keybind = cmd+s>x=close_surface
+background-opacity = 0.95
+
+macos-titlebar-style = hidden
+macos-titlebar-style = transparent
+macos-option-as-alt = true
+macos-non-native-fullscreen=true
+macos-icon = glass
+
+quick-terminal-size=20%,40%
+quick-terminal-position=top
+
+keybind = alt+f=toggle_fullscreen
+window-save-state = always
+title="⚠️ shit again ⚠️"
+
+window-decoration=true
+window-inherit-working-directory=true
+working-directory=home
+bell-features=system
+
+window-padding-y = 0
+window-padding-x = 0
+background-blur=2
+
+link-url = true
+
+
+confirm-close-surface=false
+custom-shader = shaders/cursor_smear.glsl
+# custom-shader = shaders/cursor_frozen.glsl
+# custom-shader = shaders/cursor_blaze.glsl
+# custom-shader = shaders/WIP.glsl
+# custom-shader = shaders/manga_slash.glsl
+keybind = cmd+s>n=new_window
+# keybind = global:cmd+l=toggle_quick_terminal
+keybind = global:ctrl+grave_accent=toggle_quick_terminal
+
+
+
+
+
+
+# tabs
+keybind = cmd+s>c=new_tab
+keybind = cmd+s>shift+l=next_tab
+keybind = cmd+s>shift+h=previous_tab
+keybind = cmd+s>comma=move_tab:-1
+keybind = cmd+s>period=move_tab:1
+keybind = cmd+s>n=toggle_fullscreen
+# quick tab switch
+keybind = cmd+s>1=goto_tab:1
+keybind = cmd+s>2=goto_tab:2
+keybind = cmd+s>3=goto_tab:3
+keybind = cmd+s>4=goto_tab:4
+keybind = cmd+s>5=goto_tab:5
+keybind = cmd+s>6=goto_tab:6
+keybind = cmd+s>7=goto_tab:7
+keybind = cmd+s>8=goto_tab:8
+keybind = cmd+s>9=goto_tab:9
+
+# split
+keybind = cmd+s>\=new_split:right
+keybind = cmd+s>-=new_split:down
+
+keybind = cmd+s>j=goto_split:bottom
+keybind = cmd+s>k=goto_split:top
+keybind = cmd+s>h=goto_split:left
+keybind = cmd+s>l=goto_split:right
+
+keybind = cmd+s>z=toggle_split_zoom
+
+keybind = cmd+s>e=equalize_splits
+
+# other
+copy-on-select = clipboard
+keybind = shift+enter=text:\x1b\r

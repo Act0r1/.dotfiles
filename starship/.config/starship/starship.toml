@@ -1,0 +1,71 @@
+add_newline = false
+
+# Use custom format
+format = """
+[╭─](white)$directory$rust$nodejs$bun$python$git_branch$time
+[╰─](white)$character """
+
+# Wait 10 milliseconds for starship to check files under the current directory.
+scan_timeout = 10
+
+[python]
+format = 'via [${symbol}${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'
+style = "bold white"
+
+[nodejs]
+format = " [ $version](bold green) "
+
+[memory_usage]
+disabled = false
+threshold = -1
+symbol = ' '
+style = 'bold dimmed green'
+# Username settings
+[username]
+show_always = true
+style_root = "bold red"
+style_user = "bold yellow"
+format = "[$user]($style) "
+disabled = false
+
+# Hostname settings
+[hostname]
+ssh_only = false
+format =  " on [$hostname](bold red)"
+trim_at = ".companyname.com"
+disabled = false
+
+# Directory indicator
+[directory]
+read_only = "🔒"
+style = "bold cyan"
+read_only_style = "red"
+truncation_length = 12
+truncation_symbol = "…/"
+disabled = false
+
+
+# git settings
+[git_branch]
+symbol = "  "
+truncation_length = 20
+truncation_symbol = ""
+
+# cmd_duration config
+[cmd_duration]
+show_milliseconds = true
+style = "bold yellow"
+format = "took [$duration]($style)"
+
+[time]
+disabled = false
+format = ' at [$time]($style)'
+time_format = "%T"  # 24-hour format HH:MM:SS
+style = "bold yellow"
+
+[character]
+format = "$symbol"
+success_symbol = "[❯](bold green)"
+error_symbol = "[✗](bold red) "
+vicmd_symbol = "[❮](bold green)"
+disabled = false
