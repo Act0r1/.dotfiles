@@ -182,9 +182,7 @@ alias lst="lsof -i -P -n | grep LISTEN"
 alias ll="ls -lah"
 alias pbp='pwd | pbcopy'
 alias glc="git clone"
-alias nn="nvim ~/.config/nvim"
-
-# git aliases (бывшие oh-my-zsh)
+alias nn="cd ~/.dotfiles/nvim/.config && nvim ."
 alias g="git"
 alias ga="git add"
 alias gaa="git add --all"
