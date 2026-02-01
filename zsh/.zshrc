@@ -72,6 +72,11 @@ if [[ $- == *i* ]] && [ -t 1 ]; then
   bindkey "^[[A" history-beginning-search-backward
   bindkey "^[[B" history-beginning-search-forward
 
+  # edit command in nvim
+  autoload -Uz edit-command-line
+  zle -N edit-command-line
+  bindkey '^x^e' edit-command-line
+
   # fzf
   [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
@@ -89,6 +94,14 @@ if [[ $- == *i* ]] && [ -t 1 ]; then
   # zle widgets
   zle -N fzf_code_open
   bindkey '^o' fzf_code_open
+
+  # Strip leading/trailing whitespace from pasted text only
+  bracketed-paste() {
+    zle .bracketed-paste
+    BUFFER="${BUFFER#"${BUFFER%%[![:space:]]*}"}"  # strip leading
+    BUFFER="${BUFFER%"${BUFFER##*[![:space:]]}"}"  # strip trailing
+  }
+  zle -N bracketed-paste
 
 fi
 
@@ -149,6 +162,7 @@ EOF
 
 # ===================== env =====================
 eval "$(batman --export-env)"
+eval "$(direnv hook zsh)"
 
 # ===================== aliases =====================
 alias dl="docker ps --format '{{.ID}}\t{{.Image}}\t{{.Names}}' | fzf --with-nth=2,3 --header 'Select container' | awk '{print \$1}' | xargs -r docker logs -f"
@@ -194,6 +208,7 @@ alias gst="git status"
 alias gp="git push"
 alias gl="git pull"
 alias glog="git log --oneline --graph"
+alias cl="claude"
 
 # global aliases
 alias -g J='| jq'

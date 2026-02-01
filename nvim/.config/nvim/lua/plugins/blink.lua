@@ -24,6 +24,7 @@ return {
                 enabled = false,
             },
             keymap = {
+                ["<C-y>"] = {}, -- Disable for smartcomplete ghost text
                 ["<CR>"] = { "accept", "fallback" },
                 ["<Tab>"] = {
                     function(cmp)

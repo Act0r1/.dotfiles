@@ -122,6 +122,12 @@ vim.keymap.set("n", "<leader>pa", function()
     print("file:", path)
 end)
 
+vim.keymap.set("n", "yp", function()
+    local path = vim.fn.expand("%:p")
+    vim.fn.setreg("+", path)
+    print("Copied: " .. path)
+end, { desc = "Yank full file path" })
+
 -- ============================================================================
 -- AUTOCMDS
 -- ============================================================================

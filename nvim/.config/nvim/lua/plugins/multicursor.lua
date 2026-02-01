@@ -18,15 +18,25 @@ return {
         set("n", "<c-leftdrag>", mc.handleMouseDrag)
         set("n", "<c-leftrelease>", mc.handleMouseRelease)
 
-        set({ "n", "x" }, "<leader>n", function() mc.matchAddCursor(1) end)
+        -- Как Ctrl+D в VS Code: выделяет слово под курсором и добавляет следующие совпадения
+        set({ "n", "x" }, "<leader>n", function()
+            local mode = vim.fn.mode()
+            if mode == "n" then
+                -- В normal mode: сначала выделить слово под курсором
+                vim.cmd("normal! viw")
+            end
+            mc.matchAddCursor(1)
+        end)
         set({ "n", "x" }, "<leader>sk", function() mc.matchSkipCursor(1) end)
+
         set({ "n", "x" }, "<leader>NK", function() mc.matchAddCursor(-1) end)
         set({ "n", "x" }, "<leader>SK", function() mc.matchSkipCursor(-1) end)
 
-        set({ "n", "x" }, "<leader>k", function()
+        -- Skip cursor (пропустить строку): Alt+Shift+k/j
+        set({ "n", "x" }, "<A-S-k>", function()
             mc.lineSkipCursor(-1, { skimEmpty = true })
         end)
-        set({ "n", "x" }, "<leader>j", function()
+        set({ "n", "x" }, "<A-S-j>", function()
             mc.lineSkipCursor(1, { skimEmpty = true })
         end)
 
