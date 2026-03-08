@@ -1,5 +1,25 @@
+-- OLD CONFIG (с <C-U>):
+-- return {
+--     "christoomey/vim-tmux-navigator",
+--     cmd = {
+--         "TmuxNavigateLeft",
+--         "TmuxNavigateDown",
+--         "TmuxNavigateUp",
+--         "TmuxNavigateRight",
+--         "TmuxNavigatePrevious",
+--     },
+--     keys = {
+--         { "<C-h>",  "<cmd><C-U>TmuxNavigateLeft<cr>" },
+--         { "<C-j>",  "<cmd><C-U>TmuxNavigateDown<cr>" },
+--         { "<C-k>",  "<cmd><C-U>TmuxNavigateUp<cr>" },
+--         { "<C-l>",  "<cmd><C-U>TmuxNavigateRight<cr>" },
+--         { "<C-\\>", "<cmd><C-U>TmuxNavigatePrevious<cr>" },
+--     },
+-- }
+
 return {
     "christoomey/vim-tmux-navigator",
+    enabled = true,
     cmd = {
         "TmuxNavigateLeft",
         "TmuxNavigateDown",
@@ -7,12 +27,20 @@ return {
         "TmuxNavigateRight",
         "TmuxNavigatePrevious",
     },
+    -- OLD keys (без silent):
+    -- keys = {
+    --     { "<C-h>",  "<cmd>TmuxNavigateLeft<cr>" },
+    --     { "<C-j>",  "<cmd>TmuxNavigateDown<cr>" },
+    --     { "<C-k>",  "<cmd>TmuxNavigateUp<cr>" },
+    --     { "<C-l>",  "<cmd>TmuxNavigateRight<cr>" },
+    --     { "<C-\\>", "<cmd>TmuxNavigatePrevious<cr>" },
+    -- },
     keys = {
-        { "<C-h>",  "<cmd><C-U>TmuxNavigateLeft<cr>" },
-        { "<C-j>",  "<cmd><C-U>TmuxNavigateDown<cr>" },
-        { "<C-k>",  "<cmd><C-U>TmuxNavigateUp<cr>" },
-        { "<C-l>",  "<cmd><C-U>TmuxNavigateRight<cr>" },
-        { "<C-\\>", "<cmd><C-U>TmuxNavigatePrevious<cr>" },
+        { "<C-h>",  "<cmd>silent! TmuxNavigateLeft<cr>" },
+        { "<C-j>",  "<cmd>silent! TmuxNavigateDown<cr>" },
+        { "<C-k>",  "<cmd>silent! TmuxNavigateUp<cr>" },
+        { "<C-l>",  "<cmd>silent! TmuxNavigateRight<cr>" },
+        { "<C-\\>", "<cmd>silent! TmuxNavigatePrevious<cr>" },
     },
 }
 

@@ -88,6 +88,8 @@ vim.opt.clipboard = "unnamedplus"
 vim.opt.updatetime = 300
 vim.opt.timeoutlen = 500
 vim.opt.ttimeoutlen = 0
+vim.opt.ttyfast = true
+vim.opt.lazyredraw = true
 
 -- ============================================================================
 -- BEHAVIOR SETTINGS

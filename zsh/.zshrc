@@ -1,30 +1,32 @@
 # ===================== базовые ENV =====================
-source $HOME/.zshenv
+[[ -f "$HOME/.cargo/env" ]] && source "$HOME/.cargo/env"
 
 export EDITOR="nvim"
 export LANG="en_US.UTF-8"
-export NO_PROXY="localhost,127.0.0.1,::1"
-export HTTPS_PROXY="http://127.0.0.1:10808"
-export HTTP_PROXY="http://127.0.0.1:10808"
+# export NO_PROXY="localhost,127.0.0.1,::1"
+# export HTTPS_PROXY="http://127.0.0.1:10808"
+# export HTTP_PROXY="http://127.0.0.1:10808"
 
 # Пути
-[ -f "/Users/yea8er/.ghcup/env" ] && . "/Users/yea8er/.ghcup/env"
-export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
-. "$HOME/.local/bin/env"
+[[ -s "$HOME/.bun/_bun" ]] && source "$HOME/.bun/_bun"
+[[ -f "$HOME/.local/bin/env" ]] && source "$HOME/.local/bin/env"
 
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
 
-# pnpm
-export PNPM_HOME="/Users/yea8er/Library/pnpm"
-case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
-esac
+# ===================== oh-my-zsh =====================
+export ZSH="$HOME/.oh-my-zsh"
+ZSH_THEME=""  # используем starship
 
-# opencode
-export PATH=/Users/yea8er/.opencode/bin:$PATH
+plugins=(
+  git
+  fzf
+  zsh-autosuggestions
+  zsh-syntax-highlighting
+)
+
+source $ZSH/oh-my-zsh.sh
 
 # ===================== zsh options =====================
 setopt AUTO_CD
@@ -46,19 +48,6 @@ setopt HIST_VERIFY
 setopt SHARE_HISTORY
 
 # ===================== completions =====================
-_cache_completion() {
-  local file=~/.zfunc/_$1
-  [[ -s $file ]] || eval "$2" > $file 2>/dev/null
-}
-
-mkdir -p ~/.zfunc
-_cache_completion uv "uv generate-shell-completion zsh"
-_cache_completion fnm "fnm completions --shell zsh"
-_cache_completion docker "docker completion zsh"
-
-fpath=(~/.zfunc /opt/homebrew/share/zsh/site-functions $fpath)
-autoload -Uz compinit && compinit
-
 zstyle ':completion:*' menu select
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
@@ -77,19 +66,13 @@ if [[ $- == *i* ]] && [ -t 1 ]; then
   zle -N edit-command-line
   bindkey '^x^e' edit-command-line
 
-  # fzf
-  [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+  # autosuggest accept
+  bindkey '^ ' autosuggest-accept
 
   # starship & zoxide
   export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
-  eval "$(/opt/homebrew/bin/starship init zsh)"
+  eval "$(starship init zsh)"
   eval "$(zoxide init zsh)"
-
-  # plugins (brew prefix кэшируем)
-  _brew_prefix="/opt/homebrew"
-  source $_brew_prefix/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-  source $_brew_prefix/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-  bindkey '^ ' autosuggest-accept
 
   # zle widgets
   zle -N fzf_code_open
@@ -102,22 +85,11 @@ if [[ $- == *i* ]] && [ -t 1 ]; then
     BUFFER="${BUFFER%"${BUFFER##*[![:space:]]}"}"  # strip trailing
   }
   zle -N bracketed-paste
-
 fi
 
 # ===================== функции =====================
 function field() {
   awk -F "${2:- }" "{print \$${1:-1} }"
-}
-
-function fzf_ctrl_r_opts () {
-  export FZF_CTRL_R_OPTS="
-    --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)+abort'
-    --color header:italic
-    --header 'Press CTRL-Y to copy command into clipboard'"
-  export FZF_ALT_C_OPTS="
-    --walker-skip .git,node_modules,target
-    --preview 'tree -C {}'"
 }
 
 function fzf_code_open() {
@@ -157,30 +129,24 @@ EOF
   fi
 }
 
-
 [[ -f ~/.zsh_private ]] && source ~/.zsh_private
 
-# ===================== env =====================
-eval "$(batman --export-env)"
+# ===================== env tools =====================
 eval "$(direnv hook zsh)"
+eval "$(batman --export-env)"
 
 # ===================== aliases =====================
 alias dl="docker ps --format '{{.ID}}\t{{.Image}}\t{{.Names}}' | fzf --with-nth=2,3 --header 'Select container' | awk '{print \$1}' | xargs -r docker logs -f"
 alias nf="fd --type f --hidden --exclude .git | fzf --preview 'bat --color=always --style=numbers --line-range :100 {}' | xargs -r nvim"
 alias kk="ps -ef | fzf --multi | awk '{print \$2}' | xargs kill -9"
 alias n="nvim"
-alias p="python3.14"
 alias nz="nvim ~/.dotfiles/zsh/.zshrc"
 alias sz="exec zsh"
 alias b="bat --theme=Dracula"
-alias pi="pip3 install"
-alias bi="brew install"
 alias ls="eza --icons"
-alias tpr="telepresence"
 alias cd3="cd ../../.."
 alias cd4="cd ../../../.."
 alias rn="rg --no-ignore --hidden"
-alias pir="pip3 install -r requirements.txt"
 alias hl="rg -i --passthru"
 alias dcf="docker compose up --build"
 alias dcl="docker compose logs"
@@ -188,13 +154,10 @@ alias dcd="docker compose down"
 alias dcp="docker compose ps -a"
 alias vimdiff="nvim -d"
 alias lg="lazygit"
-alias bws="~/.config/bin/bw.sh"
 alias y="yazi"
 alias man="batman"
-alias csh="~/.config/scripts/check_hash.sh"
 alias lst="lsof -i -P -n | grep LISTEN"
 alias ll="ls -lah"
-alias pbp='pwd | pbcopy'
 alias glc="git clone"
 alias nn="cd ~/.dotfiles/nvim/.config && nvim ."
 alias g="git"
@@ -209,12 +172,31 @@ alias gp="git push"
 alias gl="git pull"
 alias glog="git log --oneline --graph"
 alias cl="claude"
-
+alias pbp='pwd | wl-copy'
+alias open="xdg-open"
+alias swit='ssh -p 48923 -f -N -L 7596:localhost:30555 swi@87.120.222.197 -i ~/.ssh/xui'
 # global aliases
 alias -g J='| jq'
 alias -g G='| grep'
 alias -g L='| less'
 alias -g H='| head'
 alias -g T='| tail'
+alias oc="opencode"
+
 
 bindkey ' ' magic-space
+
+# pnpm
+export PNPM_HOME="/home/yea8er/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end
+
+# fnm
+FNM_PATH="/home/yea8er/.local/share/fnm"
+if [ -d "$FNM_PATH" ]; then
+  export PATH="$FNM_PATH:$PATH"
+  eval "`fnm env`"
+fi

@@ -38,9 +38,10 @@ return {
                 },
             })
             vim.lsp.enable("tailwindcss")
-            vim.lsp.enable("dockerls")
+            -- vim.lsp.enable("dockerls")
             vim.lsp.enable("cssls")
             vim.lsp.enable("astro")
+            -- vim.lsp.enable('ty')
 
             -- require("lspconfig").cssls.setup({
             --     cmd = { "vscode-css-language-server", "--stdio" },
@@ -97,8 +98,17 @@ return {
                     },
                 },
             })
-            vim.lsp.enable("biome")
             vim.lsp.enable("docker_compose_language_service")
+            vim.lsp.config("docker_compose_language_service", {
+                settings = {
+                    ["docker_compose_language_service"] = {
+                        capabilities = capabilities,
+                        cmd = { 'docker-compose-langserver', '--stdio' },
+                        filetypes = { 'yaml.docker-compose' },
+                        single_file_support = true,
+                    }
+                }
+            })
             vim.lsp.enable("clangd", true) --.setup({ capabilites = capabilities })
             -- vim.lsp.enable("ty", true)
             vim.lsp.enable("ruff", true)

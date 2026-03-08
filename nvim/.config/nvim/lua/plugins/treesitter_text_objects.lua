@@ -1,73 +1,85 @@
 return {
 	"nvim-treesitter/nvim-treesitter-textobjects",
-	dependencies = { "nvim-treesitter/nvim-treesitter" },
+	branch = "main",
+	event = { "BufReadPre", "BufNewFile" },
 	config = function()
-		require("nvim-treesitter.configs").setup({
-			indent = {
-				enable = true,
-			},
-			highlight = {
-				enable = true,
-			},
-			textobjects = {
-				select = {
-					enable = true,
+		local select = require("nvim-treesitter-textobjects.select")
 
-					-- Automatically jump forward to textobj, similar to targets.vim
-					lookahead = true,
-
-					keymaps = {
-						["af"] = "@function.outer",
-						["if"] = "@function.inner",
-
-						["ca"] = "@call.outer",
-						["ci"] = "@call.inner",
-
-						["ac"] = "@class.outer",
-						["ic"] = { query = "@class.inner", desc = "Select inner part of a class region" },
-						["as"] = { query = "@local.scope", query_group = "locals", desc = "Select language scope" },
-
-						["l="] = "@assignment.lhs",
-						["a="] = "@assignment.outer",
-						["i="] = "@assignment.inner",
-						["r="] = "@assignment.rhs",
-
-						["aa"] = "@parameter.outer",
-						["ai"] = "@parameter.outer",
-
-						["id"] = "@conditional.inner",
-						["ia"] = "@conditional.outer",
-
-						["al"] = "@loop.outer",
-						["il"] = "@loop.inner",
-
-						["ar"] = "@return.outer",
-						["ir"] = "@return.inner",
-					},
-					-- You can choose the select mode (default is charwise 'v')
-					--
-					-- Can also be a function which gets passed a table with the keys
-					-- * query_string: eg '@function.inner'
-					-- * method: eg 'v' or 'o'
-					-- and should return the mode ('v', 'V', or '<c-v>') or a table
-					-- mapping query_strings to modes.
-					-- selection_modes = {
-					--     ["@parameter.outer"] = "v", -- charwise
-					--     ["@function.outer"] = "V",  -- linewise
-					--     ["@class.outer"] = "<c-v>", -- blockwise
-					-- },
-					-- If you set this to `true` (default is `false`) then any textobject is
-					-- extended to include preceding or succeeding whitespace. Succeeding
-					-- whitespace has priority in order to act similarly to eg the built-in
-					-- `ap`.
-					--
-					-- Can also be a function which gets passed a table with the keys
-					-- * query_string: eg '@function.inner'
-					-- * selection_mode: eg 'v'
-					-- and should return true or false
-					include_surrounding_whitespace = false,
-				},
+		require("nvim-treesitter-textobjects").setup({
+			select = {
+				lookahead = true,
+				include_surrounding_whitespace = false,
 			},
 		})
+
+		-- Function textobjects
+		vim.keymap.set({ "x", "o" }, "af", function()
+			select.select_textobject("@function.outer", "textobjects")
+		end)
+		vim.keymap.set({ "x", "o" }, "if", function()
+			select.select_textobject("@function.inner", "textobjects")
+		end)
+
+		-- Class textobjects
+		vim.keymap.set({ "x", "o" }, "ac", function()
+			select.select_textobject("@class.outer", "textobjects")
+		end)
+		vim.keymap.set({ "x", "o" }, "ic", function()
+			select.select_textobject("@class.inner", "textobjects")
+		end)
+
+		-- Call textobjects
+		vim.keymap.set({ "x", "o" }, "aC", function()
+			select.select_textobject("@call.outer", "textobjects")
+		end)
+		vim.keymap.set({ "x", "o" }, "iC", function()
+			select.select_textobject("@call.inner", "textobjects")
+		end)
+
+		-- Parameter textobjects
+		vim.keymap.set({ "x", "o" }, "aa", function()
+			select.select_textobject("@parameter.outer", "textobjects")
+		end)
+		vim.keymap.set({ "x", "o" }, "ia", function()
+			select.select_textobject("@parameter.inner", "textobjects")
+		end)
+
+		-- Conditional textobjects
+		vim.keymap.set({ "x", "o" }, "ai", function()
+			select.select_textobject("@conditional.outer", "textobjects")
+		end)
+		vim.keymap.set({ "x", "o" }, "ii", function()
+			select.select_textobject("@conditional.inner", "textobjects")
+		end)
+
+		-- Loop textobjects
+		vim.keymap.set({ "x", "o" }, "al", function()
+			select.select_textobject("@loop.outer", "textobjects")
+		end)
+		vim.keymap.set({ "x", "o" }, "il", function()
+			select.select_textobject("@loop.inner", "textobjects")
+		end)
+
+		-- Assignment textobjects
+		vim.keymap.set({ "x", "o" }, "a=", function()
+			select.select_textobject("@assignment.outer", "textobjects")
+		end)
+		vim.keymap.set({ "x", "o" }, "i=", function()
+			select.select_textobject("@assignment.inner", "textobjects")
+		end)
+		vim.keymap.set({ "x", "o" }, "l=", function()
+			select.select_textobject("@assignment.lhs", "textobjects")
+		end)
+		vim.keymap.set({ "x", "o" }, "r=", function()
+			select.select_textobject("@assignment.rhs", "textobjects")
+		end)
+
+		-- Return textobjects
+		vim.keymap.set({ "x", "o" }, "ar", function()
+			select.select_textobject("@return.outer", "textobjects")
+		end)
+		vim.keymap.set({ "x", "o" }, "ir", function()
+			select.select_textobject("@return.inner", "textobjects")
+		end)
 	end,
 }

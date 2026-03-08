@@ -32,7 +32,7 @@ end, { noremap = true, silent = true })
 
 key("n", "<leader>,", ":bprev<CR>")
 key("n", "<leader>.", ":bnext<CR>")
-key("n", "<Tab>", ":BufferLineCycleNext <CR>", opts)
+-- key("n", "<Tab>", ":BufferLineCycleNext <CR>", opts)
 
 -- ============================================================================
 -- BASIC EDITOR KEYMAPS
