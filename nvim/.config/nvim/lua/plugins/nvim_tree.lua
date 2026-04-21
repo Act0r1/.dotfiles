@@ -5,9 +5,12 @@ return {
     config = function()
         require("nvim-tree").setup({
             git = {
-                -- enable = true,
+                enable = true,
                 ignore = false,
                 -- timeout = 500,
+            },
+            view = {
+                side = "right"
             },
             filters = {
                 dotfiles = false,

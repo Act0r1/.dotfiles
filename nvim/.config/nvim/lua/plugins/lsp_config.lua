@@ -21,6 +21,13 @@ return {
         config = function()
             local cap_lsp = vim.lsp.protocol.make_client_capabilities()
             local capabilities = require("blink.cmp").get_lsp_capabilities(cap_lsp)
+            local rust_threads = 2
+            if vim.uv and vim.uv.available_parallelism then
+                local ok, parallelism = pcall(vim.uv.available_parallelism)
+                if ok and type(parallelism) == "number" then
+                    rust_threads = math.min(4, math.max(2, math.floor(parallelism / 4)))
+                end
+            end
             -- require("lspconfig").lua_ls.setup({ capabilites = capabilities })
             vim.lsp.enable("lua_ls")
             vim.lsp.config("lua_ls", {
@@ -75,6 +82,34 @@ return {
 
             vim.lsp.enable("ts_ls")
             vim.lsp.enable("zls")
+            vim.lsp.config("rust_analyzer", {
+                capabilities = capabilities,
+                settings = {
+                    ["rust-analyzer"] = {
+                        cargo = {
+                            allTargets = false,
+                        },
+                        procMacro = {
+                            enable = false,
+                        },
+                        check = {
+                            command = "check",
+                            allTargets = false,
+                            extraArgs = { "-j", tostring(rust_threads) },
+                        },
+                        cachePriming = {
+                            numThreads = rust_threads,
+                        },
+                        numThreads = rust_threads,
+                        index = {
+                            depsOnlyPublicItems = true,
+                        },
+                        lru = {
+                            capacity = 128,
+                        },
+                    },
+                },
+            })
             vim.lsp.enable("rust_analyzer")
             vim.lsp.enable("gopls")
             vim.lsp.enable("zls")

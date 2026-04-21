@@ -1,0 +1,13 @@
+[Unit]
+Description=Hyprland Input Watcher (Restarts Espanso)
+After=hyprland-session.target
+
+[Service]
+Type=simple
+ExecStart=/home/yea8er/.local/bin/uv run /home/yea8er/.dotfiles/scripts/hypr-input-watcher/main.py
+WorkingDirectory=/home/yea8er/.dotfiles/scripts/hypr-input-watcher
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=default.target

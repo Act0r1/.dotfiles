@@ -1,0 +1,70 @@
+{
+  "tabs": {
+    "file_icons": true,
+    "git_status": true
+  },
+  "buffer_font_family": "Comic Mono",
+  "icon_theme": {
+    "mode": "system",
+    "light": "Zed (Default)",
+    "dark": "Catppuccin Macchiato"
+  },
+  "when_closing_with_no_tabs": "keep_window_open",
+  "vim_mode": true,
+  "vim": {
+    "use_system_clipboard": "always",
+    "toggle_relative_line_numbers": true,
+    "use_smartcase_find": true,
+    "highlight_on_yank_duration": 200
+  },
+  "relative_line_numbers": "enabled",
+  "cursor_blink": false,
+  "scrollbar": { "show": "never" },
+  "scroll_beyond_last_line": "off",
+  "vertical_scroll_margin": 8,
+  "autosave": "on_focus_change",
+  "auto_signature_help": true,
+  "autoscroll_on_clicks": true,
+  "session": {
+    "trust_all_worktrees": true
+  },
+  "telemetry": {
+    "diagnostics": false,
+    "metrics": false
+  },
+  "command_aliases": {
+    "W": "w",
+    "Wq": "wq",
+    "Q": "q"
+  },
+  "ui_font_size": 16,
+  "buffer_font_size": 15,
+  "buffer_line_height": "comfortable",
+  "inlay_hints": {
+    "enabled": true,
+    "show_type_hints": true,
+    "show_parameter_hints": true
+  },
+  "git": {
+    "git_gutter": "tracked_files",
+    "inline_blame": { "enabled": true }
+  },
+  "terminal": {
+    "font_size": 14,
+    "blinking": "off"
+  },
+  "format_on_save": "on",
+  "theme": {
+    "mode": "system",
+    "light": "Gruvbox Light",
+    "dark": "Ayu Dark"
+  },
+  "tab_size": 4,
+  "hard_tabs": false,
+  "languages": {
+    "JavaScript": { "tab_size": 2 },
+    "TypeScript": { "tab_size": 2 },
+    "TSX": { "tab_size": 2 },
+    "Lua": { "tab_size": 2 }
+  }
+}

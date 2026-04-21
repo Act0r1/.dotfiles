@@ -78,7 +78,7 @@ vim.opt.foldnestmax = 100
 -- SHELL & SYSTEM
 -- ============================================================================
 
-vim.opt.shellcmdflag = "-ic"
+vim.opt.shellcmdflag = "-c"
 vim.opt.clipboard = "unnamedplus"
 
 -- ============================================================================

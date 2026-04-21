@@ -1,6 +1,6 @@
 local opts = { noremap = true, silent = true }
 local key = vim.keymap.set
-
+vim.opt.statusline = " "
 -- ============================================================================
 -- FORMATTING
 -- ============================================================================
@@ -163,6 +163,7 @@ vim.opt.diffopt:append("linematch:60")
 vim.opt.redrawtime = 10000
 vim.opt.maxmempattern = 20000
 
+vim.cmd("NvimTreeResize 50")
 local undodir = vim.fn.expand("~/.vim/undodir")
 if vim.fn.isdirectory(undodir) == 0 then
     vim.fn.mkdir(undodir, "p")

@@ -20,11 +20,6 @@ return {
 
         -- Как Ctrl+D в VS Code: выделяет слово под курсором и добавляет следующие совпадения
         set({ "n", "x" }, "<leader>n", function()
-            local mode = vim.fn.mode()
-            if mode == "n" then
-                -- В normal mode: сначала выделить слово под курсором
-                vim.cmd("normal! viw")
-            end
             mc.matchAddCursor(1)
         end)
         set({ "n", "x" }, "<leader>sk", function() mc.matchSkipCursor(1) end)
