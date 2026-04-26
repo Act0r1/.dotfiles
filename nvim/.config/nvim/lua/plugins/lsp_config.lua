@@ -1,11 +1,6 @@
 return {
     {
         "neovim/nvim-lspconfig",
-        opts = {
-            inlay_hints = {
-                enabled = true,
-            },
-        },
         dependencies = {
             "saghen/blink.cmp",
             {
@@ -19,8 +14,6 @@ return {
         },
 
         config = function()
-            local cap_lsp = vim.lsp.protocol.make_client_capabilities()
-            local capabilities = require("blink.cmp").get_lsp_capabilities(cap_lsp)
             local rust_threads = 2
             if vim.uv and vim.uv.available_parallelism then
                 local ok, parallelism = pcall(vim.uv.available_parallelism)
@@ -28,41 +21,22 @@ return {
                     rust_threads = math.min(4, math.max(2, math.floor(parallelism / 4)))
                 end
             end
-            -- require("lspconfig").lua_ls.setup({ capabilites = capabilities })
-            vim.lsp.enable("lua_ls")
+
             vim.lsp.config("lua_ls", {
                 settings = {
-                    ["lua_ls"] = {
-                        capabilities = capabilities,
-                        settings = {
-                            Lua = {
-                                diagnostics = {
-                                    disable = { "missing-fields" },
-                                },
-                            },
+                    Lua = {
+                        diagnostics = {
+                            disable = { "missing-fields" },
                         },
                     },
                 },
             })
-            vim.lsp.enable("tailwindcss")
-            -- vim.lsp.enable("dockerls")
-            vim.lsp.enable("cssls")
-            vim.lsp.enable("astro")
-            -- vim.lsp.enable('ty')
 
-            -- require("lspconfig").cssls.setup({
-            --     cmd = { "vscode-css-language-server", "--stdio" },
-            --     filetypes = { "css" },
-            -- })
-
-            vim.lsp.enable("basedpyright")
             vim.lsp.config("basedpyright", {
-                capabilites = capabilities,
                 settings = {
                     basedpyright = {
                         analysis = {
                             autoSearchPaths = true,
-                            -- ignore = { "*" },
                             disableOrganizeImports = true,
                             useLibraryCodeForTypes = true,
                             typeCheckingMode = "standard",
@@ -73,17 +47,15 @@ return {
                             },
                             diagnosticSeverityOverrides = {
                                 reportCallIssue = "none",
-                                reportUnusedCoroutine = true,
+                                reportExplicitAny = "none",
+                                reportUnusedCoroutine = false,
                             },
                         },
                     },
                 },
             })
 
-            vim.lsp.enable("ts_ls")
-            vim.lsp.enable("zls")
             vim.lsp.config("rust_analyzer", {
-                capabilities = capabilities,
                 settings = {
                     ["rust-analyzer"] = {
                         cargo = {
@@ -100,7 +72,6 @@ return {
                         cachePriming = {
                             numThreads = rust_threads,
                         },
-                        numThreads = rust_threads,
                         index = {
                             depsOnlyPublicItems = true,
                         },
@@ -110,56 +81,46 @@ return {
                     },
                 },
             })
-            vim.lsp.enable("rust_analyzer")
-            vim.lsp.enable("gopls")
-            vim.lsp.enable("zls")
 
             vim.lsp.config("gopls", {
                 settings = {
-                    ["gopls"] = {
-                        capabilities = capabilities,
-                        cmd = { "gopls" },
-                        filetypes = { "go", "gomod", "gowork", "gotmpl" },
-                        -- root_dir = util.root_pattern("go.work", "go.mod", ".git"),
-                        settings = {
-                            gopls = {
-                                completeUnimported = true,
-                                usePlaceholders = true,
-                                analyses = {
-                                    unusedparams = true,
-                                },
-                            },
+                    gopls = {
+                        completeUnimported = true,
+                        usePlaceholders = true,
+                        analyses = {
+                            unusedparams = true,
                         },
                     },
                 },
             })
+
+            vim.lsp.enable("lua_ls")
+            vim.lsp.enable("basedpyright")
+            vim.lsp.enable("rust_analyzer")
+            vim.lsp.enable("gopls")
+            vim.lsp.enable("ts_ls")
+            vim.lsp.enable("zls")
+            vim.lsp.enable("tailwindcss")
+            vim.lsp.enable("cssls")
+            vim.lsp.enable("astro")
+            vim.lsp.enable("clangd")
+            vim.lsp.enable("ruff")
             vim.lsp.enable("docker_compose_language_service")
-            vim.lsp.config("docker_compose_language_service", {
-                settings = {
-                    ["docker_compose_language_service"] = {
-                        capabilities = capabilities,
-                        cmd = { 'docker-compose-langserver', '--stdio' },
-                        filetypes = { 'yaml.docker-compose' },
-                        single_file_support = true,
-                    }
-                }
-            })
-            vim.lsp.enable("clangd", true) --.setup({ capabilites = capabilities })
-            -- vim.lsp.enable("ty", true)
-            vim.lsp.enable("ruff", true)
-            -- vim.lsp.enable("zls", true)
-            vim.api.nvim_create_autocmd("lspattach", {
-                group = vim.api.nvim_create_augroup("userlspconfig", {}),
+
+            vim.api.nvim_create_user_command("LspRestart", function(args)
+                vim.cmd("lsp restart " .. (args.args or ""))
+            end, { nargs = "?", desc = "Restart LSP (0.12 shim for :lsp restart)" })
+
+            vim.api.nvim_create_autocmd("LspAttach", {
+                group = vim.api.nvim_create_augroup("userlspconfig", { clear = true }),
                 callback = function(ev)
-                    vim.bo[ev.buf].omnifunc = "v:lua.vim.lsp.omnifunc"
                     local opts = { buffer = ev.buf }
-                    vim.keymap.set(
-                        { "n", "x" },
-                        "<leader>ca",
+                    vim.bo[ev.buf].omnifunc = "v:lua.vim.lsp.omnifunc"
+
+                    vim.keymap.set({ "n", "x" }, "<leader>ca",
                         '<cmd>lua require("fastaction").code_action()<CR>',
-                        { desc = "Display code actions", buffer = ev.buf }
-                    )
-                    vim.keymap.set("n", "gd", vim.lsp.buf.declaration, opts)
+                        { desc = "Code actions", buffer = ev.buf })
+                    vim.keymap.set("n", "gD", vim.lsp.buf.declaration, opts)
                     vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
                     vim.keymap.set("n", "<c-]>", vim.lsp.buf.hover, opts)
                     vim.keymap.set("n", "gi", vim.lsp.buf.implementation, opts)
@@ -170,21 +131,12 @@ return {
                     vim.keymap.set("n", "<space>td", vim.lsp.buf.type_definition, opts)
                     vim.keymap.set("n", "<space>rn", vim.lsp.buf.rename, opts)
                     vim.keymap.set("n", "gr", vim.lsp.buf.references, opts)
-                end,
-            })
 
-            vim.api.nvim_create_autocmd("LspAttach", {
-                callback = function(args)
-                    local c = vim.lsp.get_client_by_id(args.data.client_id)
-                    if not c then
-                        return
-                    end
-
-                    if vim.bo.filetype == "lua" then
+                    if vim.bo[ev.buf].filetype == "lua" then
                         vim.api.nvim_create_autocmd("BufWritePre", {
-                            buffer = args.buf,
+                            buffer = ev.buf,
                             callback = function()
-                                vim.lsp.buf.format({ bufnr = args.buf, id = c.id })
+                                vim.lsp.buf.format({ bufnr = ev.buf, id = ev.data.client_id })
                             end,
                         })
                     end

@@ -85,6 +85,8 @@ if [[ $- == *i* ]] && [ -t 1 ]; then
     BUFFER="${BUFFER%"${BUFFER##*[![:space:]]}"}"  # strip trailing
   }
   zle -N bracketed-paste
+
+  bindkey ' ' magic-space
 fi
 
 # ===================== функции =====================
@@ -174,7 +176,8 @@ alias glog="git log --oneline --graph"
 alias cl="claude"
 alias pbp='pwd | wl-copy'
 alias open="xdg-open"
-alias swit='ssh -p 48923 -f -N -L 7596:localhost:30555 swi@87.120.222.197 -i ~/.ssh/xui'
+alias swit='ssh -p ${MY_PORT} -f -N -L 7596:localhost:30555 ${MY_USER}@${MY_IP} -i ${MY_PATH}'
+alias p="python3"
 # global aliases
 alias -g J='| jq'
 alias -g G='| grep'
@@ -182,9 +185,9 @@ alias -g L='| less'
 alias -g H='| head'
 alias -g T='| tail'
 alias oc="opencode"
+alias glo='brave "$(git remote get-url origin | sed "s|git@||;s|\.git$||;s|:|/|")"'
+alias glm='brave "https://$(git remote get-url origin | sed "s|git@||;s|\.git$||;s|:|/|")/-/merge_requests/new?merge_request%5Bsource_branch%5D=$(git branch --show-current)"'
 
-
-bindkey ' ' magic-space
 
 # pnpm
 export PNPM_HOME="/home/yea8er/.local/share/pnpm"
