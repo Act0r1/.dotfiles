@@ -2,23 +2,40 @@ return {
 	"williamboman/mason.nvim",
 	dependencies = {
 		"williamboman/mason-lspconfig.nvim",
+		"WhoIsSethDaniel/mason-tool-installer.nvim",
 		"neovim/nvim-lspconfig",
 	},
-	build = ":MasonUpdate", -- Automatically update Mason when running Lazy sync
-	opts = {
-		ensure_installed = {
-			"lua-ls", --[[ "pyright" ]]
-			"tailwindcss",
-			"basedpyright",
-			"clangd",
-			"ts_ls",
-			"gopls",
-			"postgres_lsp",
-		}, -- Example tools
-		ui = {
-			border = "rounded", -- Optional: adds rounded borders to Mason's UI
-		},
-	},
-	event = "VeryLazy", -- Load Mason lazily
-	-- require("lspconfig").lua_ls.setup({}),
+	build = ":MasonUpdate",
+	event = "VeryLazy",
+	config = function()
+		require("mason").setup({
+			ui = { border = "rounded" },
+		})
+		require("mason-lspconfig").setup({
+			ensure_installed = {
+				"lua_ls",
+				"basedpyright",
+				"ruff",
+				"gopls",
+				"clangd",
+				"postgres_lsp",
+				"taplo",
+				"marksman",
+				"terraformls",
+				"ts_ls",
+				"tailwindcss",
+			},
+			automatic_installation = true,
+		})
+		require("mason-tool-installer").setup({
+			ensure_installed = {
+				"stylua",
+				"biome",
+				"prettier",
+			},
+			run_on_start = true,
+			start_delay = 0,
+			debounce_hours = 0,
+		})
+	end,
 }

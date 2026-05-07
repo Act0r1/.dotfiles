@@ -34,6 +34,9 @@ return {
         return {
             options = {
                 -- theme = "auto",
+                -- globalstatus = true (lualine default on nvim>=0.7) hides per-window statusline,
+                -- which breaks nvim-tree's A/B window-picker labels. Forcing false to bring them back.
+                globalstatus = false,
                 component_separators = "|",
                 section_separators = { left = "", right = "" },
             },

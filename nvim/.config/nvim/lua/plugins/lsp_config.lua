@@ -62,7 +62,7 @@ return {
                             allTargets = false,
                         },
                         procMacro = {
-                            enable = false,
+                            enable = true,
                         },
                         check = {
                             command = "check",
@@ -106,6 +106,10 @@ return {
             vim.lsp.enable("clangd")
             vim.lsp.enable("ruff")
             vim.lsp.enable("docker_compose_language_service")
+            vim.lsp.enable("postgres_lsp")
+            vim.lsp.enable("taplo")
+            vim.lsp.enable("marksman")
+            vim.lsp.enable("terraformls")
 
             vim.api.nvim_create_user_command("LspRestart", function(args)
                 vim.cmd("lsp restart " .. (args.args or ""))

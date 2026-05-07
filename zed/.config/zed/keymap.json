@@ -11,10 +11,37 @@
     {
         "context": "vim_mode == normal",
         "bindings": {
+            // Навигация между панелями (override Editor's ctrl-h = DeployReplace)
+            "ctrl-h": "workspace::ActivatePaneLeft",
+            "ctrl-l": "workspace::ActivatePaneRight",
+            "ctrl-j": "workspace::ActivatePaneDown",
+            "ctrl-k": "workspace::ActivatePaneUp",
+
+            // === ctrl-w splits (как в vim) ===
+            "ctrl-w v": "pane::SplitRight",
+            "ctrl-w s": "pane::SplitDown",
+            "ctrl-w h": "workspace::ActivatePaneLeft",
+            "ctrl-w l": "workspace::ActivatePaneRight",
+            "ctrl-w j": "workspace::ActivatePaneDown",
+            "ctrl-w k": "workspace::ActivatePaneUp",
+            "ctrl-w q": "pane::CloseActiveItem",
+            "ctrl-w c": "pane::CloseActiveItem",
+            "ctrl-w o": "workspace::CloseInactiveTabsAndPanes",
+            "ctrl-w =": "vim::ResetPaneSizes",
+            "ctrl-w _": "vim::MaximizePane",
+            "ctrl-w >": "vim::ResizePaneRight",
+            "ctrl-w <": "vim::ResizePaneLeft",
+            "ctrl-w +": "vim::ResizePaneUp",
+            "ctrl-w -": "vim::ResizePaneDown",
+
             // Файлы и поиск (fzf-lua аналоги)
             "space f f": "file_finder::Toggle",
             "space f w": "pane::DeploySearch",
+            "space f g": "pane::DeploySearch",
             "space f b": "tab_switcher::Toggle",
+            "space f r": "projects::OpenRecent",
+            "space f s": "outline::Toggle",
+            "space f S": "project_symbols::Toggle",
 
             // Окна / сплиты
             "space v": "pane::SplitRight",
@@ -36,8 +63,30 @@
             "] d": "editor::GoToDiagnostic",
             "[ d": "editor::GoToPreviousDiagnostic",
 
-            // Файловое дерево
-            "space j": "workspace::ToggleLeftDock",
+            // Git (как <leader>gg LazyGit в nvim)
+            "space g g": "git_panel::ToggleFocus",
+            "space g b": "editor::ToggleGitBlameInline",
+            "space g B": "editor::ToggleGitBlame",
+            "space g d": "git::Diff",
+            "space g s": "git::ToggleStaged",
+            "space g r": "git::Restore",
+            "space g p": "git::Push",
+            "space g l": "git::Pull",
+            "] h": "editor::GoToHunk",
+            "[ h": "editor::GoToPreviousHunk",
+
+            // Терминал (как <leader>t floating terminal в nvim)
+            "space t": "terminal_panel::ToggleFocus",
+            "space '": "workspace::NewCenterTerminal",
+
+            // Файловое дерево (project_panel, справа)
+            "space j": "project_panel::ToggleFocus",
+            // Свернуть всё дерево (после auto_reveal останется только путь к текущему файлу)
+            "space J": "project_panel::CollapseAllEntries",
+
+            // Навигация по истории (как ctrl-o / ctrl-i в vim, но через alt-< / alt->)
+            "alt-<": "pane::GoBack",
+            "alt->": "pane::GoForward",
 
             "g y": ["vim::PushObject", { "around": true }],
 
@@ -50,6 +99,22 @@
 
             // Join/split (treesj аналог)
             "space m": "editor::JoinLines",
+        },
+    },
+
+    // === EmptyPane / SharedScreen (когда нет открытого файла) ===
+    {
+        "context": "EmptyPane || SharedScreen",
+        "bindings": {
+            "space f f": "file_finder::Toggle",
+            "space f w": "pane::DeploySearch",
+            "space f g": "pane::DeploySearch",
+            "space f r": "projects::OpenRecent",
+            "space f b": "tab_switcher::Toggle",
+            "space j": "project_panel::ToggleFocus",
+            "space t": "terminal_panel::ToggleFocus",
+            "space '": "workspace::NewCenterTerminal",
+            "space g g": "git_panel::ToggleFocus",
         },
     },
 
@@ -86,6 +151,8 @@
     {
         "context": "Terminal",
         "bindings": {
+            // выход из терминала к редактору
+            "ctrl-\\": "workspace::ToggleBottomDock",
             "ctrl-h": ["terminal::SendKeystroke", "ctrl-h"],
             "ctrl-l": ["terminal::SendKeystroke", "ctrl-l"],
             "ctrl-k": ["terminal::SendKeystroke", "ctrl-k"],
@@ -101,6 +168,19 @@
             "ctrl-l": "workspace::ActivatePaneRight",
             "ctrl-k": "workspace::ActivatePaneUp",
             "ctrl-j": "workspace::ActivatePaneDown",
+        },
+    },
+
+    // === ProjectPanel — переход между деревом и редактором ===
+    {
+        "context": "ProjectPanel",
+        "bindings": {
+            "ctrl-h": "workspace::ActivatePaneLeft",
+            "ctrl-l": "workspace::ActivatePaneRight",
+            "ctrl-k": "workspace::ActivatePaneUp",
+            "ctrl-j": "workspace::ActivatePaneDown",
+            "alt-<": "pane::GoBack",
+            "alt->": "pane::GoForward",
         },
     },
 ]

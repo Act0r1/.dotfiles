@@ -128,6 +128,12 @@ vim.keymap.set("n", "yp", function()
     print("Copied: " .. path)
 end, { desc = "Yank full file path" })
 
+vim.keymap.set("n", "gp", function()
+    local path = vim.fn.expand("%:p")
+    vim.fn.setreg("+", path)
+    print("Copied: " .. path)
+end, { desc = "Copy absolute path of current file" })
+
 -- ============================================================================
 -- AUTOCMDS
 -- ============================================================================

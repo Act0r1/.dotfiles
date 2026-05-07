@@ -135,7 +135,6 @@ EOF
 
 # ===================== env tools =====================
 eval "$(direnv hook zsh)"
-eval "$(batman --export-env)"
 
 # ===================== aliases =====================
 alias dl="docker ps --format '{{.ID}}\t{{.Image}}\t{{.Names}}' | fzf --with-nth=2,3 --header 'Select container' | awk '{print \$1}' | xargs -r docker logs -f"
@@ -157,7 +156,6 @@ alias dcp="docker compose ps -a"
 alias vimdiff="nvim -d"
 alias lg="lazygit"
 alias y="yazi"
-alias man="batman"
 alias lst="lsof -i -P -n | grep LISTEN"
 alias ll="ls -lah"
 alias glc="git clone"
@@ -190,7 +188,7 @@ alias glm='brave "https://$(git remote get-url origin | sed "s|git@||;s|\.git$||
 
 
 # pnpm
-export PNPM_HOME="/home/yea8er/.local/share/pnpm"
+export PNPM_HOME="/home/yeager/.local/share/pnpm"
 case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
   *) export PATH="$PNPM_HOME:$PATH" ;;
@@ -198,8 +196,10 @@ esac
 # pnpm end
 
 # fnm
-FNM_PATH="/home/yea8er/.local/share/fnm"
+FNM_PATH="/home/yeager/.local/share/fnm"
 if [ -d "$FNM_PATH" ]; then
   export PATH="$FNM_PATH:$PATH"
   eval "`fnm env`"
 fi
+
+. "$HOME/.local/share/../bin/env"
