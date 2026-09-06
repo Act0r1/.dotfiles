@@ -58,19 +58,15 @@ in
     };
     ".local/bin/clx" = {
       source = link "${dotfiles}/linux-bin/.local/bin/clx";
-      executable = true;
     };
     ".local/bin/screenshot" = {
       source = link "${dotfiles}/linux-bin/.local/bin/screenshot";
-      executable = true;
     };
     ".local/bin/screenrecord" = {
       source = link "${dotfiles}/linux-bin/.local/bin/screenrecord";
-      executable = true;
     };
     ".local/bin/whisper-live" = {
       source = link "${dotfiles}/linux-bin/.local/bin/whisper-live";
-      executable = true;
     };
   };
 }
