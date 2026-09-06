@@ -97,8 +97,9 @@ used by `nix run .`.
 
 ## Noctalia v4 and v5
 
-The optional Hyprland profile retains both Linux-only releases with separate formats in the shared
-`noctalia/.config/noctalia` directory:
+The optional Hyprland profile uses the official Hyprland 0.56.2 flake package
+and its matching portal. It retains both Linux-only Noctalia releases with
+separate formats in the shared `noctalia/.config/noctalia` directory:
 
 - v4: `settings.json`, `colors.json`, `plugins.json`.
 - v5: `config.toml`.

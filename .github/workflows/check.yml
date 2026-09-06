@@ -15,11 +15,29 @@ jobs:
       - uses: cachix/install-nix-action@v31.10.6
       - name: Check flake
         run: nix flake check --all-systems --show-trace
-      - name: Build desktop Home Manager profile
-        run: nix build .#homeConfigurations.desktop.activationPackage --no-link
       - name: Evaluate remaining Home Manager profiles
         run: |
           nix eval --raw .#homeConfigurations.desktop-hyprland.activationPackage.drvPath
           nix eval --raw .#homeConfigurations.linux-aarch64.activationPackage.drvPath
           nix eval --raw .#homeConfigurations.darwin-aarch64.activationPackage.drvPath
           nix eval --raw .#homeConfigurations.darwin-x86_64.activationPackage.drvPath
+      - name: Free disk space for the desktop closure
+        run: |
+          df -h /
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup
+          sudo apt-get clean
+          df -h /
+      - name: Build desktop Home Manager profile
+        shell: bash
+        run: |
+          set -o pipefail
+          log="$RUNNER_TEMP/nix-build-desktop.log"
+          if nix build .#homeConfigurations.desktop.activationPackage --no-link 2>&1 | tee "$log"; then
+            exit 0
+          fi
+          message="$(tail -n 30 "$log")"
+          message="${message//'%'/'%25'}"
+          message="${message//$'\r'/'%0D'}"
+          message="${message//$'\n'/'%0A'}"
+          printf '::error title=Desktop Home Manager build failed::%s\n' "$message"
+          exit 1
