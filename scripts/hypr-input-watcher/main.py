@@ -1,12 +1,15 @@
 import asyncio
 import logging
+import os
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
-KEYBOARD_MAC_PATH = "C5_C9_DB_78_22_4B"
+KEYBOARD_MAC_PATH = os.environ.get("HYPR_INPUT_KEYBOARD_PATH", "")
+WIFI_INTERFACE = os.environ.get("HYPR_INPUT_WIFI_INTERFACE", "wlan0")
+RESTART_SING_BOX = os.environ.get("HYPR_INPUT_RESTART_SING_BOX") == "1"
 
 
 async def restart_espanso() -> None:
@@ -20,7 +23,7 @@ async def restart_espanso() -> None:
 async def wait_for_wifi(timeout: int = 30) -> bool:
     for _ in range(timeout):
         proc = await asyncio.create_subprocess_exec(
-            "ip", "addr", "show", "wlan0",
+            "ip", "addr", "show", WIFI_INTERFACE,
             stdout=asyncio.subprocess.PIPE,
         )
         out, _ = await proc.communicate()
@@ -31,24 +34,25 @@ async def wait_for_wifi(timeout: int = 30) -> bool:
 
 
 async def restart_sing_box() -> None:
+    if not RESTART_SING_BOX:
+        return
+
     logger.info("waiting for wifi before restarting sing-box")
     if not await wait_for_wifi():
         logger.warning("wifi not ready after 30s, restarting sing-box anyway")
     else:
         logger.info("wifi is up")
-    logger.info("stopping sing-box")
-    stop = await asyncio.create_subprocess_exec(
-        "sudo", "systemctl", "stop", "sing-box"
+    logger.info("restarting sing-box")
+    proc = await asyncio.create_subprocess_exec(
+        "systemctl", "restart", "sing-box"
     )
-    await stop.wait()
-    logger.info("starting sing-box")
-    start = await asyncio.create_subprocess_exec(
-        "sudo", "systemctl", "start", "sing-box"
-    )
-    await start.wait()
+    await proc.wait()
 
 
 async def main() -> None:
+    if not KEYBOARD_MAC_PATH:
+        raise RuntimeError("HYPR_INPUT_KEYBOARD_PATH is required")
+
     while True:
         try:
             proc = await asyncio.create_subprocess_exec(

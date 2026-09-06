@@ -1,7 +1,6 @@
 --- theme
 vim.cmd([[colorscheme catppuccin]])
 
-
 -- For docker-compose LSP
 vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
     pattern = { "docker-compose.yml", "docker-compose.yaml", "docker-compose.*.yml", "docker-compose.*.yaml" },
@@ -9,7 +8,6 @@ vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
         vim.bo.filetype = "yaml.docker-compose"
     end,
 })
-
 
 -- highlight yank
 vim.api.nvim_create_autocmd("TextYankPost", {
@@ -21,6 +19,11 @@ vim.api.nvim_create_autocmd("TextYankPost", {
     end,
 })
 
+vim.filetype.add({
+    pattern = {
+        [".*compose.*%.ya?ml"] = "yaml.docker-compose",
+    },
+})
 -- restore cursor to file position in previous editing session
 vim.api.nvim_create_autocmd("BufReadPost", {
     callback = function(args)
@@ -91,8 +94,8 @@ vim.api.nvim_create_user_command("PyInit", function()
 
     local assignments = {}
     for param in params:gmatch("[^,]+") do
-        param = param:match("^%s*(.-)%s*$")     -- trim
-        param = param:match("^([^:=]+)")        -- удаляем type hints
+        param = param:match("^%s*(.-)%s*$") -- trim
+        param = param:match("^([^:=]+)") -- удаляем type hints
         if param and param ~= "" then
             param = param:match("^%s*(.-)%s*$") -- trim again
             table.insert(assignments, "        self." .. param .. " = " .. param)
@@ -107,3 +110,21 @@ end, { desc = "Generate self.x = x from __init__ params" })
 vim.keymap.set("n", "<leader>pi", ":PyInit<CR>", { desc = "Python: Init assignments" })
 -- Zig config
 vim.g.zig_fmt_parse_errors = 0
+
+-- autosave every 10 seconds
+local autosave = vim.uv.new_timer()
+autosave:start(10000, 10000, vim.schedule_wrap(function()
+    if vim.fn.mode():sub(1, 1) == "i" then
+        return
+    end
+    for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+        if vim.bo[buf].modified
+            and vim.bo[buf].buftype == ""
+            and not vim.bo[buf].readonly
+            and vim.api.nvim_buf_get_name(buf) ~= "" then
+            vim.api.nvim_buf_call(buf, function()
+                vim.cmd("silent! noautocmd update")
+            end)
+        end
+    end
+end))

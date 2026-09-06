@@ -7,11 +7,19 @@
         },
     },
 
+    // Левый док — только когда фокус в редакторе
+    {
+        "context": "Editor",
+        "bindings": {
+            "ctrl-shift-l": "workspace::ToggleLeftDock",
+        },
+    },
+
     // === Normal mode ===
     {
-        "context": "vim_mode == normal",
+        "context": "Editor && vim_mode == normal",
         "bindings": {
-            // Навигация между панелями (override Editor's ctrl-h = DeployReplace)
+            // Навигация по направлению — заходит и в доки (агент, терминал, дерево)
             "ctrl-h": "workspace::ActivatePaneLeft",
             "ctrl-l": "workspace::ActivatePaneRight",
             "ctrl-j": "workspace::ActivatePaneDown",
@@ -36,8 +44,6 @@
 
             // Файлы и поиск (fzf-lua аналоги)
             "space f f": "file_finder::Toggle",
-            "space f w": "pane::DeploySearch",
-            "space f g": "pane::DeploySearch",
             "space f b": "tab_switcher::Toggle",
             "space f r": "projects::OpenRecent",
             "space f s": "outline::Toggle",
@@ -57,6 +63,7 @@
             "space e": "editor::Hover",
             "space r n": "editor::Rename",
             "space c a": "editor::ToggleCodeActions",
+            "ctrl-e": "outline::Toggle",
             "space l d": "outline::Toggle",
 
             // Диагностика
@@ -64,7 +71,7 @@
             "[ d": "editor::GoToPreviousDiagnostic",
 
             // Git (как <leader>gg LazyGit в nvim)
-            "space g g": "git_panel::ToggleFocus",
+            "space g g": "git_panel::Toggle",
             "space g b": "editor::ToggleGitBlameInline",
             "space g B": "editor::ToggleGitBlame",
             "space g d": "git::Diff",
@@ -75,18 +82,10 @@
             "] h": "editor::GoToHunk",
             "[ h": "editor::GoToPreviousHunk",
 
-            // Терминал (как <leader>t floating terminal в nvim)
             "space t": "terminal_panel::ToggleFocus",
             "space '": "workspace::NewCenterTerminal",
 
-            // Файловое дерево (project_panel, справа)
-            "space j": "project_panel::ToggleFocus",
-            // Свернуть всё дерево (после auto_reveal останется только путь к текущему файлу)
-            "space J": "project_panel::CollapseAllEntries",
-
-            // Навигация по истории (как ctrl-o / ctrl-i в vim, но через alt-< / alt->)
-            "alt-<": "pane::GoBack",
-            "alt->": "pane::GoForward",
+            "space j": "workspace::ToggleRightDock",
 
             "g y": ["vim::PushObject", { "around": true }],
 
@@ -102,25 +101,25 @@
         },
     },
 
-    // === EmptyPane / SharedScreen (когда нет открытого файла) ===
+    // === EmptyPane (когда нет открытого файла) ===
     {
-        "context": "EmptyPane || SharedScreen",
+        "context": "EmptyPane",
         "bindings": {
             "space f f": "file_finder::Toggle",
             "space f w": "pane::DeploySearch",
             "space f g": "pane::DeploySearch",
             "space f r": "projects::OpenRecent",
             "space f b": "tab_switcher::Toggle",
-            "space j": "project_panel::ToggleFocus",
+            "space j": "workspace::ToggleRightDock",
             "space t": "terminal_panel::ToggleFocus",
             "space '": "workspace::NewCenterTerminal",
-            "space g g": "git_panel::ToggleFocus",
+            "space g g": "git_panel::Toggle",
         },
     },
 
     // === Visual mode ===
     {
-        "context": "vim_mode == visual",
+        "context": "Editor && vim_mode == visual",
         "bindings": {
             // Перемещение строк
             "alt-j": "editor::MoveLineDown",
@@ -153,10 +152,11 @@
         "bindings": {
             // выход из терминала к редактору
             "ctrl-\\": "workspace::ToggleBottomDock",
-            "ctrl-h": ["terminal::SendKeystroke", "ctrl-h"],
-            "ctrl-l": ["terminal::SendKeystroke", "ctrl-l"],
-            "ctrl-k": ["terminal::SendKeystroke", "ctrl-k"],
-            "ctrl-j": ["terminal::SendKeystroke", "ctrl-j"],
+            // навигация по направлению — выйти из терминала в любую сторону
+            "ctrl-h": "workspace::ActivatePaneLeft",
+            "ctrl-l": "workspace::ActivatePaneRight",
+            "ctrl-k": "workspace::ActivatePaneUp",
+            "ctrl-j": "workspace::ActivatePaneDown",
         },
     },
 

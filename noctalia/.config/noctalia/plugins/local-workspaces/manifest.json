@@ -1,0 +1,15 @@
+{
+  "id": "local-workspaces",
+  "name": "Local Workspaces",
+  "version": "0.1.0",
+  "minNoctaliaVersion": "4.7.7",
+  "author": "Local",
+  "description": "Shows the last active application for each occupied Hyprland workspace",
+  "entryPoints": {
+    "main": "Main.qml",
+    "barWidget": "BarWidget.qml"
+  },
+  "metadata": {
+    "defaultSettings": {}
+  }
+}

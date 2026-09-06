@@ -1,0 +1,23 @@
+{
+  "id": "spotify-media",
+  "name": "Spotify Media",
+  "version": "1.0.0",
+  "minNoctaliaVersion": "4.7.7",
+  "author": "Local",
+  "license": "MIT",
+  "description": "Media bar and player panel with a Spotify Like action",
+  "tags": [
+    "Panel",
+    "Bar",
+    "Media",
+    "Spotify"
+  ],
+  "entryPoints": {
+    "main": "Main.qml",
+    "barWidget": "BarWidget.qml",
+    "panel": "Panel.qml"
+  },
+  "metadata": {
+    "defaultSettings": {}
+  }
+}

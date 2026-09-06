@@ -1,27 +1,29 @@
-font-family="ComicShannsMono Nerd Font Mono"
-# font-family="FiraCode Nerd Font Mono"
-# font-family="JetBrainsMono Nerd Font Mono"
-# font-family="Symbols Nerd Font Mono"
+#font-family="ComicShannsMono Nerd Font Mono"
+font-family="FiraCode Nerd Font Mono"
+#font-family="Hack Nerd Font"
+#font-family="JetBrainsMono Nerd Font Mono"
+#font-family="Symbols Nerd Font Mono"
 # -> ->
 # theme=ChallengerDeep
 # theme=Dracula
 # theme=Github-Dark-Colorblind
 # theme=Horizon
-# theme=TokyoNight
-theme=Catppuccin Mocha
-selection-background = #4a5272
+theme=TokyoNight
+#theme=Ayu
+#theme=Catppuccin Mocha
+#selection-background = #4b5272
 font-size=13
 shell-integration = zsh
 
 # keybindings (ctrl for Linux)
 keybind = ctrl+g>r=reload_config
 keybind = ctrl+g>x=close_surface
-background-opacity = 0.95
+background-opacity = 0.97
+background-blur = 20
 
 quick-terminal-size=20%,40%
 quick-terminal-position=top
 
-keybind = alt+f=toggle_fullscreen
 window-save-state = always
 
 window-decoration=none
@@ -31,11 +33,19 @@ bell-features=system
 
 window-padding-y = 0
 window-padding-x = 0
-background-blur=2
 
 link-url = true
 
+search-background = #f9e2af
+search-foreground = #11111b
+search-selected-background = #f38ba8
+search-selected-foreground = #11111b
+notify-on-command-finish = unfocused
+notify-on-command-finish-action = no-bell,notify
+notify-on-command-finish-after = 30s
+
 confirm-close-surface=false
+custom-shader = ./shaders/bloom025.glsl
 custom-shader = ./shaders/cursor_smear.glsl
 # custom-shader = ./shaders/retro-terminal.glsl
 # custom-shader = ./shaders/kanagawa-phosphor.glsl
@@ -75,15 +85,29 @@ keybind = ctrl+g>h=goto_split:left
 keybind = ctrl+g>l=goto_split:right
 
 keybind = ctrl+g>z=toggle_split_zoom
+keybind = ctrl+g>s=activate_key_table:resize
+keybind = resize/h=resize_split:left,10
+keybind = resize/l=resize_split:right,10
+keybind = resize/k=resize_split:up,10
+keybind = resize/j=resize_split:down,10
+keybind = resize/escape=deactivate_key_table
+keybind = resize/catch_all=ignore
 
 keybind = ctrl+g>e=equalize_splits
+split-preserve-zoom = navigation
+unfocused-split-opacity = 0.72
+unfocused-split-fill = #11111b
+split-divider-color = #89b4fa
 
 # other
 copy-on-select = clipboard
 app-notifications = no-clipboard-copy
 keybind = super+c=copy_to_clipboard
 keybind = super+v=paste_from_clipboard
+keybind = ctrl+shift+key_c=copy_to_clipboard:mixed
+keybind = ctrl+shift+key_v=paste_from_clipboard
 keybind = shift+enter=text:\x1b\r
 
 # Mouse scroll speed
 mouse-scroll-multiplier = 2
+theme = ii-auto

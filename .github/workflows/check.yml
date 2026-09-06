@@ -1,0 +1,25 @@
+name: Check dotfiles
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  linux-home:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v31.10.6
+      - name: Check flake
+        run: nix flake check --all-systems --show-trace
+      - name: Build desktop Home Manager profile
+        run: nix build .#homeConfigurations.desktop.activationPackage --no-link
+      - name: Evaluate remaining Home Manager profiles
+        run: |
+          nix eval --raw .#homeConfigurations.desktop-hyprland.activationPackage.drvPath
+          nix eval --raw .#homeConfigurations.linux-aarch64.activationPackage.drvPath
+          nix eval --raw .#homeConfigurations.darwin-aarch64.activationPackage.drvPath
+          nix eval --raw .#homeConfigurations.darwin-x86_64.activationPackage.drvPath

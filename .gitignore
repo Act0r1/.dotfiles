@@ -1,0 +1,53 @@
+# Local agent state
+.claude/
+**/.claude/
+
+# Secrets and machine-local overrides
+.env
+.env.*
+!.env.example
+*.private
+settings.local.json
+
+# Editor and OS artifacts
+.DS_Store
+**/.DS_Store
+*.swp
+*.swo
+*~
+
+# Runtime state, caches, and logs
+*.log
+__pycache__/
+*.py[cod]
+.direnv/
+.devenv/
+result
+result-*
+nvim/.config/oil:/
+noctalia/.config/noctalia/plugins/daily-wallpaper/downloads/
+noctalia/.config/noctalia/plugins/screen-toolkit/shaders/*.qsb
+
+# Local backups
+*.backup
+*.backup.*
+backup/
+
+!/claude/.claude/
+/claude/.claude/*
+!/claude/.claude/CLAUDE.md
+
+/should_remove/
+/docs/
+*.tar
+*.tar.zst
+*.age
+*.pem
+*.key
+*.sqlite
+*.sqlite3
+*.db
+**/auth.json
+**/credentials.json
+**/fish_variables
+**/fish_history

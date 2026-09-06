@@ -1,0 +1,3 @@
+# Local files that must not be symlinked into $HOME by GNU Stow
+\.firecrawl
+backup

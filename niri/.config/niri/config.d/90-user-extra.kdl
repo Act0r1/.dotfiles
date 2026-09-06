@@ -1,0 +1,93 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 90 — Your personal overrides
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// This file is YOURS. iNiR updates will never overwrite it.
+// Put any custom configuration here: extra binds, per-app window rules,
+// output configuration, named workspaces, etc.
+//
+// Since Niri evaluates config top-to-bottom, settings here take effect
+// after all other config.d files. For window-rule properties, all matching
+// rules accumulate. For scalar values (like gaps), the last one wins.
+//
+// Examples:
+//
+//   // Named workspaces (sticky, always present)
+//   workspace "browser"
+//   workspace "code"
+//   workspace "music"
+//
+//   // Per-app workspace assignment
+//   window-rule {
+//       match app-id="firefox"
+//       open-on-workspace "browser"
+//   }
+//
+//   // Extra keybind
+//   binds {
+//       Mod+P { spawn "rofi" "-show" "drun"; }
+//   }
+//
+//   // Output config for your specific monitor
+//   output "DP-1" {
+//       mode "3440x1440@100.000"
+//       scale 1
+//       position x=0 y=0
+//   }
+// ─────────────────────────────────────────────────────────────────────────────
+
+input {
+    keyboard {
+        xkb {
+            layout "us,ru"
+            options "grp:caps_toggle"
+        }
+        numlock
+        repeat-delay 250
+        repeat-rate 70
+    }
+    mouse {
+        accel-profile "adaptive"
+        accel-speed 0.0
+    }
+}
+
+output "HDMI-A-1" {
+    mode "2560x1440@143.912"
+    scale 1
+    position x=0 y=0
+}
+
+spawn-at-startup "solaar" "--window=hide"
+
+
+binds {
+    Mod+Up { focus-workspace-up; }
+    Mod+Down { focus-workspace-down; }
+    F3 { spawn "inir" "region" "screenshot"; }
+    F5 allow-when-locked=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SOURCE@" "toggle"; }
+    F7 { spawn "inir" "mpris" "previous"; }
+    F8 { spawn "inir" "mpris" "playPause"; }
+    F9 { spawn "inir" "mpris" "next"; }
+    F10 allow-when-locked=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"; }
+    F11 allow-when-locked=true { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "3%-"; }
+    F12 allow-when-locked=true { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "3%+" "-l" "1.0"; }
+}
+
+xwayland-satellite {
+    path "xwayland-satellite"
+}
+
+window-rule {
+    match app-id=r#"^org\.telegram\.desktop(\..*)?$"#
+    opacity 0.97
+    draw-border-with-background false
+}
+
+layout {
+    gaps 0
+}
+
+window-rule {
+    geometry-corner-radius 0
+}

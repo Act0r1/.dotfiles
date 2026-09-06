@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+
+set -u
+
+exec 9>"${XDG_RUNTIME_DIR:-/tmp}/toggle-noctalia-version.lock"
+flock -n 9 || exit 0
+
+state_dir="${XDG_STATE_HOME:-${HOME}/.local/state}"
+state_file="${state_dir}/noctalia-shell-version"
+mkdir -p "$state_dir"
+
+release_lock() {
+    flock -u 9
+    exec 9>&-
+}
+
+activate_version() {
+    printf '%s\n' "$1" > "$state_file"
+    hyprctl reload >/dev/null
+}
+
+start_v4() {
+    activate_version v4
+    release_lock
+    qs -c noctalia-shell -d
+}
+
+start_v5() {
+    activate_version v5
+    release_lock
+    noctalia -d
+}
+
+v4_running() {
+    pgrep -f '^(/usr/bin/)?qs -c noctalia-shell( |$)' >/dev/null
+}
+
+wait_for_v5_to_stop() {
+    for _ in {1..40}; do
+        if ! pgrep -x noctalia >/dev/null; then
+            return 0
+        fi
+        sleep 0.05
+    done
+
+    return 1
+}
+
+wait_for_v4_to_stop() {
+    for _ in {1..40}; do
+        if ! v4_running; then
+            return 0
+        fi
+        sleep 0.05
+    done
+
+    return 1
+}
+
+if pgrep -x noctalia >/dev/null; then
+    pkill -TERM -x noctalia
+    wait_for_v5_to_stop || exit 1
+    start_v4
+    exit $?
+fi
+
+if v4_running; then
+    qs -c noctalia-shell kill --any-display
+    wait_for_v4_to_stop || exit 1
+    start_v5
+    exit $?
+fi
+
+start_v4

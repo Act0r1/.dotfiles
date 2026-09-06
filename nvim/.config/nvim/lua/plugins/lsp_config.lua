@@ -12,7 +12,6 @@ return {
                 },
             },
         },
-
         config = function()
             local rust_threads = 2
             if vim.uv and vim.uv.available_parallelism then
@@ -55,6 +54,12 @@ return {
                 },
             })
 
+            -- vim.lsp.config("ty", {
+            --     settings = {
+            --         ty = {},
+            --     },
+            -- })
+
             vim.lsp.config("rust_analyzer", {
                 settings = {
                     ["rust-analyzer"] = {
@@ -82,19 +87,39 @@ return {
                 },
             })
 
-            vim.lsp.config("gopls", {
-                settings = {
-                    gopls = {
-                        completeUnimported = true,
-                        usePlaceholders = true,
-                        analyses = {
-                            unusedparams = true,
-                        },
-                    },
-                },
-            })
+            vim.lsp.config("docker_compose_language_service", {
+                filetypes = { "yaml.docker-compose" },
 
-            vim.lsp.enable("lua_ls")
+                root_markers = { "docker-compose.yaml", "docker-compose.yml", "compose.yaml", "compose.yml", ".git" },
+            })
+            vim.lsp.config["ocamllsp"] = {
+                cmd = { "ocamllsp" },
+                filetypes = {
+                    "ocaml",
+                    "ocaml.interface",
+                    "ocaml.menhir",
+                    "ocaml.ocamllex",
+                    "dune",
+                    "reason",
+                },
+                root_markers = {
+                    { "dune-project", "dune-workspace" },
+                    { "*.opam",       "esy.json",      "package.json" },
+                    ".git",
+                },
+                settings = {},
+            }
+            vim.lsp.config["zls"] = {
+                -- Set to 'zls' if `zls` is in your PATH
+                filetypes = { "zig" },
+                root_markers = { "build.zig" },
+                settings = {
+                    zls = {},
+                },
+            }
+            vim.lsp.enable("zls")
+            vim.lsp.enable("ocamllsp")
+            vim.lsp.enable("lua_ls", false)
             vim.lsp.enable("basedpyright")
             vim.lsp.enable("rust_analyzer")
             vim.lsp.enable("gopls")
@@ -110,6 +135,7 @@ return {
             vim.lsp.enable("taplo")
             vim.lsp.enable("marksman")
             vim.lsp.enable("terraformls")
+            -- vim.lsp.enable("ty", false)
 
             vim.api.nvim_create_user_command("LspRestart", function(args)
                 vim.cmd("lsp restart " .. (args.args or ""))
@@ -121,9 +147,6 @@ return {
                     local opts = { buffer = ev.buf }
                     vim.bo[ev.buf].omnifunc = "v:lua.vim.lsp.omnifunc"
 
-                    vim.keymap.set({ "n", "x" }, "<leader>ca",
-                        '<cmd>lua require("fastaction").code_action()<CR>',
-                        { desc = "Code actions", buffer = ev.buf })
                     vim.keymap.set("n", "gD", vim.lsp.buf.declaration, opts)
                     vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
                     vim.keymap.set("n", "<c-]>", vim.lsp.buf.hover, opts)

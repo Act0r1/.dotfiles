@@ -2,15 +2,38 @@ return {
     "fnune/recall.nvim",
     version = "*",
     enabled = false,
+    keys = {
+        {
+            "<leader>mm",
+            function()
+                require("recall").toggle()
+            end,
+            desc = "Toggle recall mark",
+        },
+        {
+            "<leader>mn",
+            function()
+                require("recall").goto_next()
+            end,
+            desc = "Next recall mark",
+        },
+        {
+            "<leader>mp",
+            function()
+                require("recall").goto_prev()
+            end,
+            desc = "Previous recall mark",
+        },
+        {
+            "<leader>mc",
+            function()
+                require("recall").clear()
+            end,
+            desc = "Clear recall marks",
+        },
+        { "<leader>ml", "<cmd>Telescope recall<cr>", desc = "List recall marks" },
+    },
     config = function()
-        local recall = require("recall")
-
-        recall.setup({})
-
-        vim.keymap.set("n", "<leader>mm", recall.toggle, { noremap = true, silent = true })
-        vim.keymap.set("n", "<leader>mn", recall.goto_next, { noremap = true, silent = true })
-        vim.keymap.set("n", "<leader>mp", recall.goto_prev, { noremap = true, silent = true })
-        vim.keymap.set("n", "<leader>mc", recall.clear, { noremap = true, silent = true })
-        vim.keymap.set("n", "<leader>ml", ":Telescope recall<CR>", { noremap = true, silent = true })
-    end
+        require("recall").setup({})
+    end,
 }

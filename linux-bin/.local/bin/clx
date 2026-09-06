@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+config_file="${CLIPROXY_CONFIG:-$HOME/cliproxyapi/config.yaml}"
+api_key="${CLIPROXY_API_KEY:-}"
+
+if [[ -z "$api_key" ]]; then
+  if [[ ! -r "$config_file" ]]; then
+    echo "clx: cannot read CLIProxyAPI config: $config_file" >&2
+    exit 1
+  fi
+
+  api_key="$({
+    awk '
+      /^api-keys:[[:space:]]*$/ {
+        in_api_keys = 1
+        next
+      }
+
+      in_api_keys && /^[^[:space:]]/ {
+        exit
+      }
+
+      in_api_keys && /^[[:space:]]*-[[:space:]]*/ {
+        value = $0
+        sub(/^[[:space:]]*-[[:space:]]*/, "", value)
+        sub(/[[:space:]]*#.*/, "", value)
+        sub(/^"/, "", value)
+        sub(/"$/, "", value)
+        print value
+        exit
+      }
+    ' "$config_file"
+  } || true)"
+fi
+
+if [[ -z "$api_key" ]]; then
+  echo "clx: no client key found under api-keys in $config_file" >&2
+  exit 1
+fi
+
+export ANTHROPIC_BASE_URL="${CLIPROXY_BASE_URL:-http://127.0.0.1:8317}"
+export ANTHROPIC_AUTH_TOKEN="$api_key"
+export ENABLE_CLAUDEAI_MCP_SERVERS=false
+export CLAUDE_CODE_ALWAYS_ENABLE_EFFORT=1 
+export ANTHROPIC_DEFAULT_OPUS_MODEL="${CLX_OPUS_MODEL:-gpt-5.6-sol}"
+export ANTHROPIC_DEFAULT_SONNET_MODEL="${CLX_SONNET_MODEL:-gpt-5.6-luna}"
+export ANTHROPIC_DEFAULT_HAIKU_MODEL="${CLX_HAIKU_MODEL:-gpt-5.6-terra}"
+export ANTHROPIC_SMALL_FAST_MODEL="$ANTHROPIC_DEFAULT_HAIKU_MODEL"
+
+has_model=false
+for argument in "$@"; do
+  case "$argument" in
+    --model|--model=*)
+      has_model=true
+      break
+      ;;
+  esac
+done
+
+if [[ "$has_model" == true ]]; then
+  exec claude "$@"
+fi
+
+exec claude --model "$ANTHROPIC_DEFAULT_OPUS_MODEL" "$@" --permission-mode bypassPermissions

@@ -1,0 +1,20 @@
+{
+  "id": "token-meter",
+  "name": "Token Meter",
+  "version": "1.0.0",
+  "minNoctaliaVersion": "4.7.7",
+  "author": "yeager",
+  "license": "MIT",
+  "description": "Beautiful local AI token, cache and API cost statistics for Pi, Codex and Claude Code",
+  "entryPoints": {
+    "main": "Main.qml",
+    "barWidget": "BarWidget.qml",
+    "panel": "Panel.qml"
+  },
+  "dependencies": {
+    "plugins": []
+  },
+  "metadata": {
+    "defaultSettings": {}
+  }
+}
