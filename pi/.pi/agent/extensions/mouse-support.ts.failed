@@ -1,0 +1,605 @@
+import { spawn, spawnSync } from "node:child_process";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { sliceByColumn, visibleWidth, type Component, type TUI } from "@earendil-works/pi-tui";
+
+const ENABLE_MOUSE = "\x1b[?1000h\x1b[?1002h\x1b[?1006h";
+const DISABLE_MOUSE = "\x1b[?1000l\x1b[?1002l\x1b[?1003l\x1b[?1006l";
+const UP = "\x1b[A";
+const DOWN = "\x1b[B";
+const ANSI_RE = /\x1B(?:\[[0-?]*[ -/]*[@-~]|\][^\x07]*(?:\x07|\x1B\\)|_[^\x07]*(?:\x07|\x1B\\))/g;
+const SEMANTIC_CLICK_BUTTON = 128;
+const DOUBLE_CLICK_MS = 400;
+const TMUX_CLICK_SEQUENCE = "\x1b[<128;#{e|+|:#{e|-|:#{mouse_x},#{pane_left}},1};#{e|+|:#{e|-|:#{mouse_y},#{pane_top}},1}M";
+const TMUX_DEFAULT_MOUSE_DOWN = "select-pane -t = ; send-keys -M";
+const TMUX_DEFAULT_DOUBLE_CLICK = "select-pane -t = ; if-shell -F \"#{||:#{pane_in_mode},#{mouse_any_flag}}\" { send-keys -M } { copy-mode -H ; send-keys -X select-word ; run-shell -d 0.3 ; send-keys -X copy-pipe-and-cancel }";
+const TMUX_DEFAULT_TRIPLE_CLICK = "select-pane -t = ; if-shell -F \"#{||:#{pane_in_mode},#{mouse_any_flag}}\" { send-keys -M } { copy-mode -H ; send-keys -X select-line ; run-shell -d 0.3 ; send-keys -X copy-pipe-and-cancel }";
+
+const PAIRS: ReadonlyArray<readonly [string, string]> = [
+  ["\"", "\""],
+  ["'", "'"],
+  ["`", "`"],
+  ["(", ")"],
+  ["[", "]"],
+  ["{", "}"],
+  ["<", ">"],
+  ["“", "”"],
+  ["‘", "’"],
+  ["«", "»"],
+  ["‹", "›"],
+];
+
+type MouseEvent = {
+  button: number;
+  x: number;
+  y: number;
+  release: boolean;
+  drag: boolean;
+};
+
+type Point = { x: number; y: number };
+type Click = Point & { time: number };
+type Selection = {
+  line: number;
+  start: number;
+  end: number;
+  text: string;
+  kind: "pair" | "line";
+  baseLine: string;
+};
+
+type SelectTarget =
+  | { kind: "extension-selector"; component: any; index: number }
+  | { kind: "select-list"; component: any; index: number }
+  | { kind: "generic-options"; component: any; index: number };
+
+function parseMouse(data: string): MouseEvent | undefined {
+  const sgr = /^\x1B\[<(\d+);(\d+);(\d+)([Mm])$/.exec(data);
+  if (sgr) {
+    const button = Number(sgr[1]);
+    return {
+      button,
+      x: Number(sgr[2]),
+      y: Number(sgr[3]),
+      release: sgr[4] === "m",
+      drag: (button & 32) === 32,
+    };
+  }
+
+  if (data.startsWith("\x1b[M") && data.length >= 6) {
+    const button = data.charCodeAt(3) - 32;
+    return {
+      button,
+      x: data.charCodeAt(4) - 32,
+      y: data.charCodeAt(5) - 32,
+      release: button === 3,
+      drag: (button & 32) === 32,
+    };
+  }
+
+  return undefined;
+}
+
+function clean(line: string): string {
+  return line.replace(ANSI_RE, "");
+}
+
+function rendered(component: Component, width: number): string[] {
+  try {
+    return component.render(width).map((line) => clean(line).trimEnd());
+  } catch {
+    return [];
+  }
+}
+
+function childRows(component: Component, width: number): Array<{ child: Component; start: number; length: number }> {
+  const children = Array.isArray((component as any).children)
+    ? (component as any).children as Component[]
+    : [];
+  const rows: Array<{ child: Component; start: number; length: number }> = [];
+  let start = 0;
+
+  for (const child of children) {
+    const length = rendered(child, width).length;
+    rows.push({ child, start, length });
+    start += length;
+  }
+
+  return rows;
+}
+
+function isExtensionSelector(component: any): boolean {
+  return Array.isArray(component?.options)
+    && typeof component.selectedIndex === "number"
+    && typeof component.updateList === "function"
+    && typeof component.onSelectCallback === "function"
+    && component.listContainer;
+}
+
+function isSelectList(component: any): boolean {
+  return Array.isArray(component?.filteredItems)
+    && typeof component.selectedIndex === "number"
+    && typeof component.maxVisible === "number"
+    && typeof component.setSelectedIndex === "function"
+    && typeof component.onSelect === "function";
+}
+
+function isGenericOptions(component: any): boolean {
+  return Array.isArray(component?.options)
+    && typeof component.selectedIndex === "number"
+    && typeof component.handleInput === "function";
+}
+
+function hasSelectable(component: Component | undefined, width: number): boolean {
+  if (!component) return false;
+  const current = component as any;
+  if (isExtensionSelector(current) || isSelectList(current) || isGenericOptions(current)) return true;
+  return childRows(component, width).some((row) => hasSelectable(row.child, width));
+}
+
+function findSelectTarget(component: Component, width: number, relativeRow: number): SelectTarget | undefined {
+  const current = component as any;
+
+  if (isExtensionSelector(current)) {
+    const row = childRows(component, width).find((entry) => entry.child === current.listContainer);
+    if (row) {
+      const index = relativeRow - row.start;
+      if (index >= 0 && index < current.options.length) {
+        return { kind: "extension-selector", component: current, index };
+      }
+    }
+  }
+
+  if (isSelectList(current)) {
+    const maxVisible = current.maxVisible as number;
+    const items = current.filteredItems as unknown[];
+    const selectedIndex = current.selectedIndex as number;
+    const startIndex = Math.max(0, Math.min(selectedIndex - Math.floor(maxVisible / 2), items.length - maxVisible));
+    const endIndex = Math.min(startIndex + maxVisible, items.length);
+    if (relativeRow >= 0 && relativeRow < endIndex - startIndex) {
+      return { kind: "select-list", component: current, index: startIndex + relativeRow };
+    }
+  }
+
+  if (isGenericOptions(current)) {
+    const line = rendered(component, width)[relativeRow]?.trim() ?? "";
+    for (let index = 0; index < current.options.length; index++) {
+      const label = String(current.options[index]);
+      if (line === label || line.endsWith(` ${label}`) || line.includes(` ${label} `)) {
+        return { kind: "generic-options", component: current, index };
+      }
+    }
+  }
+
+  for (const row of childRows(component, width)) {
+    if (relativeRow >= row.start && relativeRow < row.start + row.length) {
+      const target = findSelectTarget(row.child, width, relativeRow - row.start);
+      if (target) return target;
+    }
+  }
+
+  return undefined;
+}
+
+function findRenderedStart(tui: any, component: Component, lineIndex: number): number | undefined {
+  const previous = ((tui.previousLines ?? []) as string[]).map((line) => clean(line).trimEnd());
+  const lines = rendered(component, tui.terminal?.columns ?? 80);
+  if (previous.length === 0 || lines.length === 0) return undefined;
+
+  const first = Math.max(0, lineIndex - lines.length + 1);
+  const last = Math.min(lineIndex, previous.length - lines.length);
+
+  for (let start = last; start >= first; start--) {
+    let matches = true;
+    for (let index = 0; index < lines.length; index++) {
+      if (previous[start + index] !== lines[index]) {
+        matches = false;
+        break;
+      }
+    }
+    if (matches) return start;
+  }
+
+  return Math.max(0, previous.length - lines.length);
+}
+
+function activateTarget(target: SelectTarget): void {
+  if (target.kind === "extension-selector") {
+    const option = target.component.options[target.index];
+    if (option === undefined) return;
+    target.component.selectedIndex = target.index;
+    target.component.updateList();
+    target.component.onSelectCallback(option);
+    return;
+  }
+
+  if (target.kind === "select-list") {
+    const item = target.component.filteredItems[target.index];
+    if (!item) return;
+    target.component.setSelectedIndex(target.index);
+    target.component.notifySelectionChange?.();
+    target.component.onSelect(item);
+    return;
+  }
+
+  target.component.selectedIndex = target.index;
+  target.component.updateList?.();
+  target.component.handleInput("\n");
+}
+
+function clickSelector(tui: any, event: MouseEvent): boolean {
+  const focused = tui.focusedComponent as Component | undefined;
+  if (!focused) return false;
+
+  if (event.button === 64 || event.button === 65) {
+    focused.handleInput?.(event.button === 64 ? UP : DOWN);
+    tui.requestRender?.();
+    return true;
+  }
+
+  if (event.release || event.drag || event.button !== 0) return true;
+
+  const previous = (tui.previousLines ?? []) as string[];
+  const viewportTop = tui.previousViewportTop ?? Math.max(0, previous.length - (tui.terminal?.rows ?? 0));
+  const lineIndex = viewportTop + event.y - 1;
+  const start = findRenderedStart(tui, focused, lineIndex);
+  if (start === undefined) return true;
+
+  const target = findSelectTarget(focused, tui.terminal?.columns ?? 80, lineIndex - start);
+  if (!target) return true;
+
+  activateTarget(target);
+  tui.requestRender?.();
+  return true;
+}
+
+function isEscaped(text: string, index: number): boolean {
+  let slashes = 0;
+  for (let cursor = index - 1; cursor >= 0 && text[cursor] === "\\"; cursor--) slashes++;
+  return slashes % 2 === 1;
+}
+
+function pairRanges(text: string): Array<{ start: number; end: number }> {
+  const ranges: Array<{ start: number; end: number }> = [];
+
+  for (const [open, close] of PAIRS) {
+    if (open === close) {
+      let start: number | undefined;
+      for (let index = 0; index < text.length; index++) {
+        if (text[index] !== open || isEscaped(text, index)) continue;
+        if (start === undefined) start = index;
+        else {
+          ranges.push({ start, end: index });
+          start = undefined;
+        }
+      }
+      continue;
+    }
+
+    const stack: number[] = [];
+    for (let index = 0; index < text.length; index++) {
+      if (text[index] === open && !isEscaped(text, index)) stack.push(index);
+      else if (text[index] === close && !isEscaped(text, index)) {
+        const start = stack.pop();
+        if (start !== undefined) ranges.push({ start, end: index });
+      }
+    }
+  }
+
+  return ranges;
+}
+
+function indexAtColumn(text: string, column: number): number | undefined {
+  const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+  let currentColumn = 0;
+
+  for (const part of segmenter.segment(text)) {
+    const width = visibleWidth(part.segment);
+    const nextColumn = currentColumn + width;
+    if (column >= currentColumn && column < Math.max(nextColumn, currentColumn + 1)) return part.index;
+    currentColumn = nextColumn;
+  }
+
+  return undefined;
+}
+
+function selectionAt(tui: any, point: Point, current: Selection | undefined): Selection | undefined {
+  const renderedLines = (tui.previousLines ?? []) as string[];
+  const lines = renderedLines.map(clean);
+  const viewportTop = tui.previousViewportTop ?? Math.max(0, lines.length - (tui.terminal?.rows ?? 0));
+  const lineIndex = viewportTop + point.y - 1;
+  const line = lines[lineIndex] ?? "";
+  const baseLine = current?.line === lineIndex ? current.baseLine : renderedLines[lineIndex] ?? "";
+  const clickIndex = indexAtColumn(line, point.x - 1);
+  if (clickIndex === undefined || /^\s$/u.test(line[clickIndex] ?? "")) return undefined;
+
+  const first = line.search(/\S/u);
+  const last = line.match(/\s*$/u)?.index ?? line.length;
+  if (first < 0 || clickIndex < first || clickIndex >= last) return undefined;
+
+  const makeSelection = (startIndex: number, endIndex: number, kind: Selection["kind"]): Selection => ({
+    line: lineIndex,
+    start: visibleWidth(line.slice(0, startIndex)),
+    end: visibleWidth(line.slice(0, endIndex)),
+    text: line.slice(startIndex, endIndex),
+    kind,
+    baseLine,
+  });
+
+  if (current?.kind === "pair" && current.line === lineIndex) {
+    return makeSelection(first, last, "line");
+  }
+
+  const pair = pairRanges(line)
+    .filter((range) => range.start < clickIndex && clickIndex < range.end && /\S/u.test(line.slice(range.start + 1, range.end)))
+    .sort((left, right) => (left.end - left.start) - (right.end - right.start))[0];
+
+  if (pair) return makeSelection(pair.start + 1, pair.end, "pair");
+  return makeSelection(first, last, "line");
+}
+
+function highlightLine(line: string, selection: Selection): string {
+  const width = visibleWidth(line);
+  if (selection.start >= width || selection.end <= selection.start) return line;
+
+  const start = Math.max(0, selection.start);
+  const end = Math.min(width, selection.end);
+  const before = sliceByColumn(line, 0, start);
+  const selected = clean(sliceByColumn(line, start, end - start));
+  const after = sliceByColumn(line, end, width - end);
+  return `${before}\x1b[0m\x1b[7m${selected}\x1b[0m${after}`;
+}
+
+function highlightSelection(lines: string[], selection: Selection | undefined): string[] {
+  if (!selection || selection.line < 0 || selection.line >= lines.length) return lines;
+  selection.baseLine = lines[selection.line] ?? "";
+  const result = [...lines];
+  result[selection.line] = highlightLine(selection.baseLine, selection);
+  return result;
+}
+
+function paintLine(tui: any, lineIndex: number, line: string): void {
+  const previous = (tui.previousLines ?? []) as string[];
+  const viewportTop = tui.previousViewportTop ?? Math.max(0, previous.length - (tui.terminal?.rows ?? 0));
+  const screenRow = lineIndex - viewportTop + 1;
+  const rows = tui.terminal?.rows ?? 0;
+  previous[lineIndex] = line;
+  if (screenRow < 1 || screenRow > rows) return;
+  tui.terminal.write(`\x1b7\x1b[${screenRow};1H${line}\x1b[K\x1b8`);
+}
+
+function extractDragSelection(tui: any, start: Point, end: Point): string {
+  const lines = ((tui.previousLines ?? []) as string[]).map(clean);
+  const viewportTop = tui.previousViewportTop ?? Math.max(0, lines.length - (tui.terminal?.rows ?? 0));
+  const a = { x: start.x - 1, y: viewportTop + start.y - 1 };
+  const b = { x: end.x - 1, y: viewportTop + end.y - 1 };
+  const from = a.y < b.y || (a.y === b.y && a.x <= b.x) ? a : b;
+  const to = from === a ? b : a;
+
+  if (from.y === to.y) {
+    return clean(sliceByColumn(lines[from.y] ?? "", from.x, to.x - from.x + 1)).trimEnd();
+  }
+
+  const selected: string[] = [];
+  const firstLine = lines[from.y] ?? "";
+  selected.push(sliceByColumn(firstLine, from.x, Math.max(0, visibleWidth(firstLine) - from.x)).trimEnd());
+  for (let line = from.y + 1; line < to.y; line++) selected.push((lines[line] ?? "").trimEnd());
+  selected.push(sliceByColumn(lines[to.y] ?? "", 0, to.x + 1).trimEnd());
+  return selected.join("\n").trim();
+}
+
+function copyPrimary(text: string, onError: (message: string) => void): void {
+  const child = spawn("wl-copy", ["--primary", "--type", "text/plain"], {
+    stdio: ["pipe", "ignore", "ignore"],
+  });
+  child.on("error", (error) => onError(error.message));
+  child.stdin.on("error", (error) => onError(error.message));
+  child.stdin.end(text);
+}
+
+function configureTmuxClicks(enabled: boolean): void {
+  const pane = process.env.TMUX_PANE;
+  if (!process.env.TMUX || !pane) return;
+
+  if (!enabled) {
+    spawnSync("tmux", ["set-option", "-p", "-u", "-t", pane, "@pi_semantic_mouse"], { stdio: "ignore" });
+    return;
+  }
+
+  spawnSync("tmux", ["set-option", "-p", "-t", pane, "@pi_semantic_mouse", "1"], { stdio: "ignore" });
+  const sendClick = `select-pane -t = ; send-keys -t = -F -l "${TMUX_CLICK_SEQUENCE}"`;
+  const bindings = [
+    ["MouseDown1Pane", TMUX_DEFAULT_MOUSE_DOWN],
+    ["DoubleClick1Pane", TMUX_DEFAULT_DOUBLE_CLICK],
+    ["TripleClick1Pane", TMUX_DEFAULT_TRIPLE_CLICK],
+  ];
+
+  for (const [key, fallback] of bindings) {
+    spawnSync("tmux", [
+      "bind-key",
+      "-T",
+      "root",
+      key,
+      "if-shell",
+      "-F",
+      "-t",
+      "=",
+      "#{@pi_semantic_mouse}",
+      sendClick,
+      fallback,
+    ], { stdio: "ignore" });
+  }
+}
+
+export default function mouseSupport(pi: ExtensionAPI) {
+  let tui: TUI | undefined;
+  let unsubscribe: (() => void) | undefined;
+  let mouseEnabled = false;
+  let copyMode = false;
+  let dragStart: Point | undefined;
+  let dragEnd: Point | undefined;
+  let lastClick: Click | undefined;
+  let selection: Selection | undefined;
+  let notify: ((message: string, type?: "info" | "warning" | "error") => void) | undefined;
+  let restoreRender: (() => void) | undefined;
+  let mouseGuard: ReturnType<typeof setInterval> | undefined;
+
+  const setMouseEnabled = (enabled: boolean, force = false) => {
+    if (!tui || (!force && mouseEnabled === enabled)) return;
+    tui.terminal.write(enabled ? ENABLE_MOUSE : DISABLE_MOUSE);
+    mouseEnabled = enabled;
+  };
+
+  const selectorActive = () => {
+    const instance = tui as any;
+    const focused = instance?.focusedComponent as Component | undefined;
+    const focusedEditor = focused as any;
+    if (typeof focusedEditor?.isShowingAutocomplete === "function" && focusedEditor.isShowingAutocomplete()) return true;
+    return hasSelectable(focused, instance?.terminal?.columns ?? 80);
+  };
+
+  const clearSelection = () => {
+    if (!selection) return;
+    const previous = selection;
+    selection = undefined;
+    lastClick = undefined;
+    if (tui) paintLine(tui as any, previous.line, previous.baseLine);
+  };
+
+  const handleSemanticClick = (point: Point) => {
+    const click = { ...point, time: Date.now() };
+    const isDouble = lastClick
+      && click.time - lastClick.time <= DOUBLE_CLICK_MS
+      && Math.abs(click.x - lastClick.x) <= 1
+      && click.y === lastClick.y;
+
+    if (!isDouble) {
+      lastClick = click;
+      return;
+    }
+
+    lastClick = undefined;
+    const next = selectionAt(tui as any, point, selection);
+    if (!next) return;
+    selection = next;
+    copyPrimary(next.text, (message) => notify?.(`Copy failed: ${message}`, "error"));
+    if (tui) paintLine(tui as any, next.line, highlightLine(next.baseLine, next));
+  };
+
+  pi.registerCommand("mouse-copy", {
+    description: "Temporarily copy the next mouse drag selection to clipboard",
+    handler: async (_args, ctx) => {
+      if (ctx.mode !== "tui") {
+        ctx.ui.notify("/mouse-copy only works in the TUI", "warning");
+        return;
+      }
+      copyMode = true;
+      dragStart = undefined;
+      dragEnd = undefined;
+      notify = ctx.ui.notify;
+      setMouseEnabled(true);
+      ctx.ui.notify("Mouse copy mode: drag text with left mouse button, release to copy. Esc cancels.", "info");
+    },
+  });
+
+  pi.on("session_start", (_event, ctx) => {
+    if (ctx.mode !== "tui") return;
+    notify = ctx.ui.notify;
+    configureTmuxClicks(true);
+
+    ctx.ui.setWidget("mouse-support", (instance: TUI) => {
+      tui = instance;
+      const originalRender = instance.render.bind(instance);
+      const wrappedRender = (width: number) => highlightSelection(originalRender(width), selection);
+      (instance as any).render = wrappedRender;
+      restoreRender = () => {
+        if ((instance as any).render === wrappedRender) (instance as any).render = originalRender;
+      };
+      setMouseEnabled(false, true);
+      mouseGuard = setInterval(() => {
+        if (!copyMode) instance.terminal.write(DISABLE_MOUSE);
+      }, 250);
+
+      return {
+        render: () => [],
+        invalidate: () => {},
+        dispose: () => {
+          restoreRender?.();
+          restoreRender = undefined;
+          if (mouseGuard) clearInterval(mouseGuard);
+          mouseGuard = undefined;
+          instance.terminal.write(DISABLE_MOUSE);
+          mouseEnabled = false;
+        },
+      };
+    }, { placement: "belowEditor" });
+
+    unsubscribe = ctx.ui.onTerminalInput((data) => {
+      if (data === "\x1b") {
+        if (copyMode) {
+          copyMode = false;
+          dragStart = undefined;
+          dragEnd = undefined;
+          setMouseEnabled(false, true);
+          notify?.("Mouse copy cancelled", "info");
+          return { consume: true };
+        }
+        if (selection) {
+          clearSelection();
+          return { consume: true };
+        }
+        return undefined;
+      }
+
+      const event = parseMouse(data);
+      if (!event || !tui) return undefined;
+
+      if (event.button === SEMANTIC_CLICK_BUTTON) {
+        handleSemanticClick({ x: event.x, y: event.y });
+        return { consume: true };
+      }
+
+      if (copyMode) {
+        if (event.button === 0 && !event.release) {
+          dragStart ??= { x: event.x, y: event.y };
+          dragEnd = { x: event.x, y: event.y };
+          return { consume: true };
+        }
+        if (event.drag) {
+          dragEnd = { x: event.x, y: event.y };
+          return { consume: true };
+        }
+        if (event.release) {
+          const text = dragStart && dragEnd ? extractDragSelection(tui as any, dragStart, dragEnd) : "";
+          copyMode = false;
+          dragStart = undefined;
+          dragEnd = undefined;
+          setMouseEnabled(false, true);
+          if (text) copyPrimary(text, (message) => notify?.(`Copy failed: ${message}`, "error"));
+          else notify?.("Nothing selected", "warning");
+          return { consume: true };
+        }
+        return { consume: true };
+      }
+
+      return { consume: true };
+    });
+  });
+
+  pi.on("session_shutdown", () => {
+    unsubscribe?.();
+    unsubscribe = undefined;
+    restoreRender?.();
+    restoreRender = undefined;
+    if (mouseGuard) clearInterval(mouseGuard);
+    mouseGuard = undefined;
+    tui?.terminal.write(DISABLE_MOUSE);
+    configureTmuxClicks(false);
+    mouseEnabled = false;
+    copyMode = false;
+    dragStart = undefined;
+    dragEnd = undefined;
+    lastClick = undefined;
+    selection = undefined;
+    tui = undefined;
+  });
+}

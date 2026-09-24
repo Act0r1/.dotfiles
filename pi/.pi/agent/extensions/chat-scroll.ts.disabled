@@ -1,0 +1,428 @@
+import { spawn } from "node:child_process";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { sliceByColumn, visibleWidth, type TUI } from "@earendil-works/pi-tui";
+
+const ENABLE_MOUSE = "\x1b[?1000h\x1b[?1002h\x1b[?1006h";
+const DISABLE_MOUSE = "\x1b[?1000l\x1b[?1002l\x1b[?1003l\x1b[?1006l";
+const UP = "\x1b[A";
+const DOWN = "\x1b[B";
+const ANSI_RE = /\x1B\][^\x07]*(?:\x07|\x1B\\)|\x1B_[^\x07]*\x07|\x1B\[[0-?]*[ -/]*[@-~]/g;
+const DOUBLE_CLICK_MS = 400;
+const PAIRS: ReadonlyArray<readonly [string, string]> = [
+  ["\"", "\""],
+  ["'", "'"],
+  ["`", "`"],
+  ["(", ")"],
+  ["[", "]"],
+  ["{", "}"],
+  ["<", ">"],
+  ["“", "”"],
+  ["‘", "’"],
+  ["«", "»"],
+  ["‹", "›"],
+];
+
+type MouseEvent = {
+  button: number;
+  x: number;
+  y: number;
+  release: boolean;
+  drag: boolean;
+};
+
+type Point = {
+  x: number;
+  y: number;
+};
+
+type Click = Point & {
+  time: number;
+};
+
+type SemanticSelection = {
+  start: number;
+  end: number;
+  kind: "pair" | "line";
+};
+
+function parseMouse(data: string): MouseEvent | undefined {
+  const match = /^\x1b\[<(\d+);(\d+);(\d+)([Mm])$/.exec(data);
+  if (!match) return undefined;
+
+  const button = Number(match[1]);
+  return {
+    button,
+    x: Number(match[2]) - 1,
+    y: Number(match[3]) - 1,
+    release: match[4] === "m",
+    drag: (button & 32) === 32,
+  };
+}
+
+function clean(line: string): string {
+  return line.replace(ANSI_RE, "").trimEnd();
+}
+
+function orderedSelection(start: Point, end: Point): [Point, Point] {
+  if (start.y < end.y || (start.y === end.y && start.x <= end.x))
+    return [start, end];
+
+  return [end, start];
+}
+
+function isEscaped(text: string, index: number): boolean {
+  let slashes = 0;
+  for (let cursor = index - 1; cursor >= 0 && text[cursor] === "\\"; cursor--) slashes++;
+  return slashes % 2 === 1;
+}
+
+function pairRanges(text: string): Array<{ start: number; end: number }> {
+  const ranges: Array<{ start: number; end: number }> = [];
+
+  for (const [open, close] of PAIRS) {
+    if (open === close) {
+      let start: number | undefined;
+      for (let index = 0; index < text.length; index++) {
+        if (text[index] !== open || isEscaped(text, index)) continue;
+        if (start === undefined) start = index;
+        else {
+          ranges.push({ start, end: index });
+          start = undefined;
+        }
+      }
+      continue;
+    }
+
+    const stack: number[] = [];
+    for (let index = 0; index < text.length; index++) {
+      if (text[index] === open && !isEscaped(text, index)) stack.push(index);
+      else if (text[index] === close && !isEscaped(text, index)) {
+        const start = stack.pop();
+        if (start !== undefined) ranges.push({ start, end: index });
+      }
+    }
+  }
+
+  return ranges;
+}
+
+function indexAtColumn(text: string, column: number): number | undefined {
+  const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+  let currentColumn = 0;
+
+  for (const part of segmenter.segment(text)) {
+    const width = visibleWidth(part.segment);
+    const nextColumn = currentColumn + width;
+    if (column >= currentColumn && column < Math.max(nextColumn, currentColumn + 1)) return part.index;
+    currentColumn = nextColumn;
+  }
+
+  return undefined;
+}
+
+function semanticSelection(line: string, column: number, expandToLine: boolean): SemanticSelection | undefined {
+  const clickIndex = indexAtColumn(line, column);
+  if (clickIndex === undefined || /^\s$/u.test(line[clickIndex] ?? "")) return undefined;
+
+  const first = line.search(/\S/u);
+  const last = line.match(/\s*$/u)?.index ?? line.length;
+  if (first < 0 || clickIndex < first || clickIndex >= last) return undefined;
+
+  const toColumns = (start: number, end: number, kind: SemanticSelection["kind"]): SemanticSelection => ({
+    start: visibleWidth(line.slice(0, start)),
+    end: visibleWidth(line.slice(0, end)),
+    kind,
+  });
+
+  if (expandToLine) return toColumns(first, last, "line");
+
+  const pair = pairRanges(line)
+    .filter((range) => range.start < clickIndex && clickIndex < range.end && /\S/u.test(line.slice(range.start + 1, range.end)))
+    .sort((left, right) => (left.end - left.start) - (right.end - right.start))[0];
+
+  if (pair) return toColumns(pair.start + 1, pair.end, "pair");
+  return toColumns(first, last, "line");
+}
+
+function copyToClipboard(text: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const child = spawn("wl-copy", [], { stdio: ["pipe", "ignore", "ignore"] });
+    child.on("error", reject);
+    child.on("close", (code) => code === 0 ? resolve() : reject(new Error(`wl-copy failed with code ${code}`)));
+    child.stdin.write(text);
+    child.stdin.end();
+  });
+}
+
+export default function chatScroll(pi: ExtensionAPI) {
+  let tui: TUI | undefined;
+  let originalRender: ((width: number) => string[]) | undefined;
+  let originalRenderDescriptor: PropertyDescriptor | undefined;
+  let unsubscribe: (() => void) | undefined;
+  let scrollOffset = 0;
+  let totalLines = 0;
+  let lastWidth = 0;
+  let visiblePlainLines: string[] = [];
+  let selectionStart: Point | undefined;
+  let selectionEnd: Point | undefined;
+  let semanticKind: SemanticSelection["kind"] | undefined;
+  let semanticRow: number | undefined;
+  let mouseDown: Point | undefined;
+  let dragging = false;
+  let lastClick: Click | undefined;
+  let copyStatusTimer: ReturnType<typeof setTimeout> | undefined;
+  let clearCopyStatus: (() => void) | undefined;
+
+  const clearSelection = () => {
+    selectionStart = undefined;
+    selectionEnd = undefined;
+    semanticKind = undefined;
+    semanticRow = undefined;
+  };
+
+  const renderSelection = (lines: string[], height: number): string[] => {
+    const viewportStart = Math.max(0, lines.length - height);
+    visiblePlainLines = lines.slice(viewportStart).map(clean);
+
+    if (!selectionStart || !selectionEnd) return lines;
+
+    const [from, to] = orderedSelection(selectionStart, selectionEnd);
+    const output = [...lines];
+    const firstRow = Math.max(0, from.y);
+    const lastRow = Math.min(visiblePlainLines.length - 1, to.y);
+
+    for (let row = firstRow; row <= lastRow; row++) {
+      const plain = visiblePlainLines[row] ?? "";
+      const width = visibleWidth(plain);
+      const startCol = Math.min(width, row === from.y ? from.x : 0);
+      const endCol = Math.min(width, row === to.y ? to.x + 1 : width);
+      if (endCol <= startCol) continue;
+
+      const before = sliceByColumn(plain, 0, startCol, true);
+      const selected = sliceByColumn(plain, startCol, endCol - startCol, true);
+      const after = sliceByColumn(plain, endCol, Math.max(0, width - endCol), true);
+      output[viewportStart + row] = `${before}\x1b[7m${selected}\x1b[27m${after}`;
+    }
+
+    return output;
+  };
+
+  const extractSelection = (): string => {
+    if (!selectionStart || !selectionEnd) return "";
+
+    const [from, to] = orderedSelection(selectionStart, selectionEnd);
+    const firstRow = Math.max(0, Math.min(from.y, visiblePlainLines.length - 1));
+    const lastRow = Math.max(0, Math.min(to.y, visiblePlainLines.length - 1));
+    const selected: string[] = [];
+
+    for (let row = firstRow; row <= lastRow; row++) {
+      const line = visiblePlainLines[row] ?? "";
+      const width = visibleWidth(line);
+      const startCol = row === from.y ? Math.min(width, from.x) : 0;
+      const endCol = row === to.y ? Math.min(width, to.x + 1) : width;
+      selected.push(sliceByColumn(line, startCol, Math.max(0, endCol - startCol), true).trimEnd());
+    }
+
+    return selected.join("\n").trim();
+  };
+
+  const restore = () => {
+    unsubscribe?.();
+    unsubscribe = undefined;
+    clearCopyStatus?.();
+    clearCopyStatus = undefined;
+
+    if (tui) {
+      if (originalRenderDescriptor)
+        Object.defineProperty(tui, "render", originalRenderDescriptor);
+      else
+        delete (tui as any).render;
+
+      tui.terminal.write(DISABLE_MOUSE);
+    }
+
+    originalRender = undefined;
+    originalRenderDescriptor = undefined;
+    scrollOffset = 0;
+    totalLines = 0;
+    lastWidth = 0;
+    visiblePlainLines = [];
+    clearSelection();
+    mouseDown = undefined;
+    dragging = false;
+    lastClick = undefined;
+    tui = undefined;
+  };
+
+  pi.on("session_start", (_event, ctx) => {
+    if (ctx.mode !== "tui") return;
+
+    clearCopyStatus = () => {
+      if (copyStatusTimer) clearTimeout(copyStatusTimer);
+      copyStatusTimer = undefined;
+      ctx.ui.setStatus("chat-scroll-copy", undefined);
+    };
+
+    const showCopyStatus = () => {
+      clearCopyStatus?.();
+      ctx.ui.setStatus(
+        "chat-scroll-copy",
+        ctx.ui.theme.fg("success", "✓ Текст скопирован"),
+      );
+      copyStatusTimer = setTimeout(() => clearCopyStatus?.(), 1500);
+    };
+
+    const copySelected = () => {
+      const text = extractSelection();
+      if (!text) return;
+      void copyToClipboard(text)
+        .then(showCopyStatus)
+        .catch((error) => ctx.ui.notify(`Ошибка копирования: ${error instanceof Error ? error.message : String(error)}`, "error"));
+    };
+
+    ctx.ui.setWidget("chat-scroll", (instance: TUI) => {
+      tui = instance;
+      originalRenderDescriptor = Object.getOwnPropertyDescriptor(instance, "render");
+      originalRender = instance.render.bind(instance);
+
+      instance.render = (width: number) => {
+        const lines = originalRender!(width);
+        const previousTotalLines = totalLines;
+        totalLines = lines.length;
+
+        if (lastWidth > 0 && width !== lastWidth) {
+          scrollOffset = 0;
+          clearSelection();
+        }
+
+        lastWidth = width;
+        const height = Math.max(1, instance.terminal.rows);
+
+        if (scrollOffset > 0)
+          scrollOffset = Math.max(0, scrollOffset + totalLines - previousTotalLines);
+
+        const maxOffset = Math.max(0, lines.length - height);
+        scrollOffset = Math.min(scrollOffset, maxOffset);
+        const end = Math.max(height, lines.length - scrollOffset);
+        const viewport = lines.slice(Math.max(0, end - height), end);
+        return renderSelection(viewport, height);
+      };
+
+      instance.terminal.write(ENABLE_MOUSE);
+
+      return {
+        render: () => [],
+        invalidate: () => {},
+        dispose: restore,
+      };
+    }, { placement: "belowEditor" });
+
+    unsubscribe = ctx.ui.onTerminalInput((data) => {
+      const event = parseMouse(data);
+
+      if (!event) {
+        if (data === "\x1b" && selectionStart) {
+          clearSelection();
+          lastClick = undefined;
+          tui?.requestRender();
+          return { consume: true };
+        }
+
+        if (scrollOffset > 0) {
+          scrollOffset = 0;
+          clearSelection();
+          tui?.requestRender();
+        }
+        return undefined;
+      }
+
+      const button = event.button & ~(4 | 8 | 16 | 32);
+
+      if (!tui) return { consume: true };
+
+      if (button === 64 || button === 65) {
+        clearSelection();
+        mouseDown = undefined;
+        dragging = false;
+        lastClick = undefined;
+        const focused = (tui as any).focusedComponent;
+        if (typeof focused?.getText !== "function")
+          return { data: button === 64 ? UP : DOWN };
+
+        const height = Math.max(1, tui.terminal.rows);
+        const maxOffset = Math.max(0, totalLines - height);
+        const step = Math.max(3, Math.floor(height / 8));
+
+        if (button === 64)
+          scrollOffset = Math.min(maxOffset, scrollOffset + step);
+        else
+          scrollOffset = Math.max(0, scrollOffset - step);
+
+        tui.requestRender();
+        return { consume: true };
+      }
+
+      if (button === 0) {
+        const point = { x: event.x, y: event.y };
+
+        if (event.release) {
+          if (dragging && selectionStart) {
+            selectionEnd = point;
+            copySelected();
+            tui.requestRender();
+          } else {
+            const click = { ...point, time: Date.now() };
+            const isDouble = lastClick
+              && click.time - lastClick.time <= DOUBLE_CLICK_MS
+              && Math.abs(click.x - lastClick.x) <= 1
+              && click.y === lastClick.y;
+
+            if (!isDouble) {
+              lastClick = click;
+            } else {
+              lastClick = undefined;
+              const line = visiblePlainLines[point.y] ?? "";
+              const range = semanticSelection(
+                line,
+                point.x,
+                semanticKind === "pair" && semanticRow === point.y,
+              );
+
+              if (range && range.end > range.start) {
+                selectionStart = { x: range.start, y: point.y };
+                selectionEnd = { x: range.end - 1, y: point.y };
+                semanticKind = range.kind;
+                semanticRow = point.y;
+                copySelected();
+                tui.requestRender();
+              }
+            }
+          }
+
+          mouseDown = undefined;
+          dragging = false;
+          return { consume: true };
+        }
+
+        if (event.drag) {
+          if (!dragging) {
+            clearSelection();
+            selectionStart = mouseDown ?? point;
+            dragging = true;
+          }
+          selectionEnd = point;
+          tui.requestRender();
+          return { consume: true };
+        }
+
+        mouseDown = point;
+        dragging = false;
+        return { consume: true };
+      }
+
+      return { consume: true };
+    });
+  });
+
+  pi.on("session_shutdown", restore);
+}

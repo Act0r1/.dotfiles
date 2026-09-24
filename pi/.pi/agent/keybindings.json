@@ -1,0 +1,10 @@
+{
+  "tui.input.newLine": ["shift+enter", "alt+enter", "ctrl+j"],
+  "tui.input.submit": ["enter"],
+  "tui.editor.cursorLineStart": ["home", "ctrl+home"],
+  "app.message.followUp": [],
+  "app.model.select": ["ctrl+l"],
+  "app.model.cycleForward": [],
+  "app.session.togglePath": ["alt+p"],
+  "app.models.toggleProvider": ["alt+p"]
+}

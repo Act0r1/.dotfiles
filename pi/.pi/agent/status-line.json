@@ -1,0 +1,18 @@
+{
+  "cwd": true,
+  "gitBranch": true,
+  "sessionName": true,
+  "inputTokens": true,
+  "outputTokens": true,
+  "cacheRead": true,
+  "cacheWrite": false,
+  "cacheHitRate": true,
+  "cost": true,
+  "contextUsage": false,
+  "provider": false,
+  "model": true,
+  "thinkingLevel": true,
+  "accessMode": false,
+  "codexLimits": false,
+  "extensionStatuses": true
+}
