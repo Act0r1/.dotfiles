@@ -4,8 +4,8 @@ After=hyprland-session.target
 
 [Service]
 Type=simple
-ExecStart=/home/yea8er/.local/bin/uv run /home/yea8er/.dotfiles/scripts/hypr-input-watcher/main.py
-WorkingDirectory=/home/yea8er/.dotfiles/scripts/hypr-input-watcher
+ExecStart=/usr/bin/env uv run %h/.dotfiles/scripts/hypr-input-watcher/main.py
+WorkingDirectory=%h/.dotfiles/scripts/hypr-input-watcher
 Restart=always
 RestartSec=3
 

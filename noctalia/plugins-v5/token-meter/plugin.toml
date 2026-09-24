@@ -1,0 +1,27 @@
+id = "yeager/token-meter"
+name = "Token Meter"
+version = "1.0.0"
+plugin_api = 3
+author = "yeager"
+license = "MIT"
+dependencies = ["python"]
+tags = ["ai", "tokens", "analytics", "codex"]
+icon = "brain"
+description = "Beautiful local AI token, cache and API cost analytics for Pi, Codex and Claude Code."
+
+[[service]]
+id = "usage-state"
+entry = "service.luau"
+
+[[widget]]
+id = "usage"
+entry = "widget.luau"
+
+[[panel]]
+id = "dashboard"
+entry = "panel.luau"
+width = 650
+height = 560
+placement = "attached"
+position = "auto"
+open_near_click = true

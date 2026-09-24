@@ -1,0 +1,10 @@
+[extend]
+useDefault = true
+
+[[rules]]
+id = "generic-api-key"
+
+[[rules.allowlists]]
+description = "QML property reference, not a credential literal"
+regexTarget = "secret"
+regexes = ['''^root\.x02ApiKey$''']

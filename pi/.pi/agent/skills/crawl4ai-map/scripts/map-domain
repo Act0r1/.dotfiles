@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+set -euo pipefail
+exec "$(uv tool dir)/crawl4ai/bin/python" "$(dirname "$0")/map_domain.py" "$@"

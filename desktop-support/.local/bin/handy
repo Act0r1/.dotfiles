@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Обёртка для Handy AppImage: всегда запускает самую свежую версию
+set -euo pipefail
+
+shopt -s nullglob
+candidates=("${HOME}"/Applications/Handy_*.appimage)
+
+if (( ${#candidates[@]} == 0 )); then
+    echo "handy: AppImage не найден в ~/Applications (Handy_*.appimage)" >&2
+    exit 1
+fi
+
+# Самый свежий по времени модификации
+app=$(ls -t "${candidates[@]}" | head -n1)
+
+exec "$app" "$@"

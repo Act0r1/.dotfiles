@@ -1,0 +1,16 @@
+node_modules/
+.env
+.env.*
+!.env.example
+auth.json*
+credentials.json
+sessions/
+/.pi/agent/workflows/
+models-store.json
+trust.json
+bin/
+git/
+*.log
+*.bak*
+__pycache__/
+!/.pi/agent/extensions/**/result-*.ts

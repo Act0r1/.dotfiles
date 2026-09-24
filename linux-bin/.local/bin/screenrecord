@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Toggle a screen recording of a user-drawn region.
+# First run: pick a region and start recording. Second run: stop and save.
+# Saves to ~/Videos by default, overridable via XDG_VIDEOS_DIR.
+
+if [[ -f ~/.config/user-dirs.dirs ]]; then
+  # shellcheck source=/dev/null
+  source ~/.config/user-dirs.dirs
+fi
+OUTPUT_DIR="${XDG_VIDEOS_DIR:-$HOME/Videos}"
+
+if [[ ! -d "$OUTPUT_DIR" ]]; then
+  notify-send "Recording directory does not exist: $OUTPUT_DIR" -u critical -t 3000
+  exit 1
+fi
+
+# Already recording? Stop it cleanly so the file is finalized.
+if pgrep -x wf-recorder >/dev/null; then
+  pkill -INT -x wf-recorder
+  notify-send "Recording stopped" -t 2000
+  exit 0
+fi
+
+# A leftover slurp from a cancelled selection — clear it.
+pkill -x slurp 2>/dev/null
+
+SELECTION=$(slurp 2>/dev/null)
+[ -z "$SELECTION" ] && exit 0
+
+FILE="$OUTPUT_DIR/recording-$(date +'%Y-%m-%d_%H-%M-%S').mp4"
+notify-send "Recording started" "Press F4 again to stop" -t 2000
+wf-recorder -g "$SELECTION" -f "$FILE" >/dev/null 2>&1
+notify-send "Recording saved" "$FILE" -t 3000

@@ -1,0 +1,28 @@
+{
+  "url": "https://github.com/snowarch/inir.git",
+  "revision": "dcba34ee124acb5a191c88b2e1952006fa5afb2f",
+  "version": "2.30.0",
+  "runtimePath": ".config/quickshell/inir",
+  "mutableConfigPath": ".config/inir",
+  "legacyConfigLink": ".config/illogical-impulse",
+  "overrides": [
+    "modules/background/widgets/visualizer/VisualizerWidget.qml",
+    "modules/bar/Bar.qml",
+    "modules/dock/Dock.qml",
+    "modules/mediaControls/MediaControls.qml",
+    "modules/mediaControls/PlayerControl.qml",
+    "modules/overview/Overview.qml",
+    "modules/overview/SearchBar.qml",
+    "modules/overview/SearchWidget.qml",
+    "modules/regionSelector/AnnotationEditor.qml",
+    "modules/regionSelector/RegionSelection.qml",
+    "modules/settings/ToolsConfig.qml",
+    "scripts/ocr-runner.sh",
+    "scripts/videos/record.sh",
+    "services/Notifications.qml"
+  ],
+  "redactedConfigKeys": [
+    "hotspot.password",
+    "sidebar.booru.zerochan.username"
+  ]
+}

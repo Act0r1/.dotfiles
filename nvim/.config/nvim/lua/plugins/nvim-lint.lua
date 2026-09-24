@@ -15,6 +15,15 @@ return {
         "BufReadPre",
         "BufNewFile",
     },
+    keys = {
+        {
+            "<leader>ls",
+            function()
+                require("lint").try_lint()
+            end,
+            desc = "Trigger linting for current file",
+        },
+    },
     config = function()
         local lint = require("lint")
 
@@ -30,9 +39,5 @@ return {
                 lint.try_lint()
             end,
         })
-
-        vim.keymap.set("n", "<leader>ls", function()
-            lint.try_lint()
-        end, { desc = "Trigger linting for current file" })
     end,
 }

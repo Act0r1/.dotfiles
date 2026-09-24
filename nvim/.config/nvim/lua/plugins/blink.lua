@@ -15,9 +15,12 @@ return {
         version = "1.*",
         -- version = "*",
         cmdline = {},
-        opts = {
-            enabled = function()
-                local disabled_filetypes = { "NvimTree", "DressingInput" } -- Add extra fileypes you do not want blink enabled.
+		opts = {
+			enabled = function()
+				local disabled_filetypes = { "NvimTree", "DressingInput" } -- Add extra fileypes you do not want blink enabled.
+                if vim.bo.buftype == "prompt" then
+                    return false -- let vim.ui.input() native completion (Tab) work
+                end
                 return not vim.tbl_contains(disabled_filetypes, vim.bo.filetype)
             end,
             cmdline = {
@@ -64,6 +67,10 @@ return {
                 },
             },
         },
+        config = function(_, opts)
+            require("blink.cmp").setup(opts)
+            vim.api.nvim_set_hl(0, "BlinkCmpSignatureHelpActiveParameter", { link = "Function" })
+        end,
         opts_extend = { "sources.default" },
     },
 }

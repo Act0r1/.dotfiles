@@ -7,14 +7,47 @@
         },
     },
 
+    // Левый док — только когда фокус в редакторе
+    {
+        "context": "Editor",
+        "bindings": {
+            "ctrl-shift-l": "workspace::ToggleLeftDock",
+        },
+    },
+
     // === Normal mode ===
     {
-        "context": "vim_mode == normal",
+        "context": "Editor && vim_mode == normal",
         "bindings": {
+            // Навигация по направлению — заходит и в доки (агент, терминал, дерево)
+            "ctrl-h": "workspace::ActivatePaneLeft",
+            "ctrl-l": "workspace::ActivatePaneRight",
+            "ctrl-j": "workspace::ActivatePaneDown",
+            "ctrl-k": "workspace::ActivatePaneUp",
+
+            // === ctrl-w splits (как в vim) ===
+            "ctrl-w v": "pane::SplitRight",
+            "ctrl-w s": "pane::SplitDown",
+            "ctrl-w h": "workspace::ActivatePaneLeft",
+            "ctrl-w l": "workspace::ActivatePaneRight",
+            "ctrl-w j": "workspace::ActivatePaneDown",
+            "ctrl-w k": "workspace::ActivatePaneUp",
+            "ctrl-w q": "pane::CloseActiveItem",
+            "ctrl-w c": "pane::CloseActiveItem",
+            "ctrl-w o": "workspace::CloseInactiveTabsAndPanes",
+            "ctrl-w =": "vim::ResetPaneSizes",
+            "ctrl-w _": "vim::MaximizePane",
+            "ctrl-w >": "vim::ResizePaneRight",
+            "ctrl-w <": "vim::ResizePaneLeft",
+            "ctrl-w +": "vim::ResizePaneUp",
+            "ctrl-w -": "vim::ResizePaneDown",
+
             // Файлы и поиск (fzf-lua аналоги)
             "space f f": "file_finder::Toggle",
-            "space f w": "pane::DeploySearch",
             "space f b": "tab_switcher::Toggle",
+            "space f r": "projects::OpenRecent",
+            "space f s": "outline::Toggle",
+            "space f S": "project_symbols::Toggle",
 
             // Окна / сплиты
             "space v": "pane::SplitRight",
@@ -30,14 +63,29 @@
             "space e": "editor::Hover",
             "space r n": "editor::Rename",
             "space c a": "editor::ToggleCodeActions",
+            "ctrl-e": "outline::Toggle",
             "space l d": "outline::Toggle",
 
             // Диагностика
             "] d": "editor::GoToDiagnostic",
             "[ d": "editor::GoToPreviousDiagnostic",
 
-            // Файловое дерево
-            "space j": "workspace::ToggleLeftDock",
+            // Git (как <leader>gg LazyGit в nvim)
+            "space g g": "git_panel::Toggle",
+            "space g b": "editor::ToggleGitBlameInline",
+            "space g B": "editor::ToggleGitBlame",
+            "space g d": "git::Diff",
+            "space g s": "git::ToggleStaged",
+            "space g r": "git::Restore",
+            "space g p": "git::Push",
+            "space g l": "git::Pull",
+            "] h": "editor::GoToHunk",
+            "[ h": "editor::GoToPreviousHunk",
+
+            "space t": "terminal_panel::ToggleFocus",
+            "space '": "workspace::NewCenterTerminal",
+
+            "space j": "workspace::ToggleRightDock",
 
             "g y": ["vim::PushObject", { "around": true }],
 
@@ -53,9 +101,25 @@
         },
     },
 
+    // === EmptyPane (когда нет открытого файла) ===
+    {
+        "context": "EmptyPane",
+        "bindings": {
+            "space f f": "file_finder::Toggle",
+            "space f w": "pane::DeploySearch",
+            "space f g": "pane::DeploySearch",
+            "space f r": "projects::OpenRecent",
+            "space f b": "tab_switcher::Toggle",
+            "space j": "workspace::ToggleRightDock",
+            "space t": "terminal_panel::ToggleFocus",
+            "space '": "workspace::NewCenterTerminal",
+            "space g g": "git_panel::Toggle",
+        },
+    },
+
     // === Visual mode ===
     {
-        "context": "vim_mode == visual",
+        "context": "Editor && vim_mode == visual",
         "bindings": {
             // Перемещение строк
             "alt-j": "editor::MoveLineDown",
@@ -86,10 +150,13 @@
     {
         "context": "Terminal",
         "bindings": {
-            "ctrl-h": ["terminal::SendKeystroke", "ctrl-h"],
-            "ctrl-l": ["terminal::SendKeystroke", "ctrl-l"],
-            "ctrl-k": ["terminal::SendKeystroke", "ctrl-k"],
-            "ctrl-j": ["terminal::SendKeystroke", "ctrl-j"],
+            // выход из терминала к редактору
+            "ctrl-\\": "workspace::ToggleBottomDock",
+            // навигация по направлению — выйти из терминала в любую сторону
+            "ctrl-h": "workspace::ActivatePaneLeft",
+            "ctrl-l": "workspace::ActivatePaneRight",
+            "ctrl-k": "workspace::ActivatePaneUp",
+            "ctrl-j": "workspace::ActivatePaneDown",
         },
     },
 
@@ -101,6 +168,19 @@
             "ctrl-l": "workspace::ActivatePaneRight",
             "ctrl-k": "workspace::ActivatePaneUp",
             "ctrl-j": "workspace::ActivatePaneDown",
+        },
+    },
+
+    // === ProjectPanel — переход между деревом и редактором ===
+    {
+        "context": "ProjectPanel",
+        "bindings": {
+            "ctrl-h": "workspace::ActivatePaneLeft",
+            "ctrl-l": "workspace::ActivatePaneRight",
+            "ctrl-k": "workspace::ActivatePaneUp",
+            "ctrl-j": "workspace::ActivatePaneDown",
+            "alt-<": "pane::GoBack",
+            "alt->": "pane::GoForward",
         },
     },
 ]

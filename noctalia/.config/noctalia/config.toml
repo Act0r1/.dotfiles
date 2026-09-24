@@ -1,0 +1,312 @@
+# Migrated from Noctalia v4 settings.json on 2026-07-15.
+# The original v4 JSON files remain untouched in this directory.
+
+[shell]
+ui_scale = 1.2
+corner_radius_scale = 1.0
+font_family = "ComicShannsMono Nerd Font"
+time_format = "{:%H:%M}"
+date_format = "%A, %x"
+telemetry_enabled = false
+clipboard_enabled = true
+clipboard_auto_paste = "off"
+settings_show_advanced = true
+
+[shell.animation]
+enabled = true
+speed = 1.0
+
+[shell.shadow]
+direction = "down_right"
+alpha = 0.55
+
+[lockscreen]
+enabled = true
+fingerprint = false
+allow_empty_password = false
+
+[shell.panel]
+transparency_mode = "solid"
+borders = true
+shadow = true
+launcher_placement = "floating"
+launcher_position = "center"
+clipboard_placement = "floating"
+clipboard_position = "center"
+control_center_placement = "attached"
+wallpaper_placement = "attached"
+session_placement = "floating"
+session_position = "center"
+open_near_click_control_center = true
+
+[shell.launcher]
+categories = true
+show_icons = true
+compact = false
+app_grid = false
+session_search = true
+sort_by_usage = true
+
+[wallpaper]
+enabled = true
+fill_mode = "center"
+fill_color = "#000000"
+transition = ["fade", "disc", "stripes", "wipe", "honeycomb"]
+transition_duration = 1500
+edge_smoothness = 0.05
+transition_on_startup = false
+directory = "~/Pictures/Wallpapers"
+
+[wallpaper.default]
+path = "~/.config/noctalia/plugins/daily-wallpaper/downloads/bing-2026-07-15.jpg"
+
+[wallpaper.automation]
+enabled = false
+interval_seconds = 0
+order = "random"
+recursive = true
+
+[theme]
+mode = "dark"
+source = "custom"
+custom_palette = "Vesper-v4"
+
+[theme.templates]
+enable_builtin_templates = true
+builtin_ids = []
+enable_community_templates = true
+community_ids = []
+
+[notification]
+enable_daemon = true
+show_app_name = true
+show_actions = true
+layer = "overlay"
+scale = 1.0
+background_opacity = 1.0
+offset_x = 20
+offset_y = 8
+
+[osd]
+position = "top_right"
+position_vertical = "top_right"
+orientation = "horizontal"
+scale = 1.0
+background_opacity = 1.0
+offset_x = 20
+offset_y = 8
+
+[osd.kinds]
+volume = true
+volume_output = true
+volume_input = true
+brightness = true
+wifi = true
+bluetooth = true
+power_profile = true
+caffeine = true
+nightlight = true
+dnd = true
+lock_keys = true
+keyboard_layout = true
+privacy = true
+
+[weather]
+enabled = true
+refresh_minutes = 30
+unit = "celsius"
+effects = true
+
+[audio]
+enable_overdrive = false
+enable_sounds = false
+sound_volume = 0.5
+volume_change_sound = ""
+notification_sound = ""
+
+[brightness]
+enable_ddcutil = false
+minimum_brightness = 0.01
+
+[nightlight]
+enabled = false
+force = false
+temperature_day = 6500
+temperature_night = 4000
+
+[system.monitor]
+enabled = true
+cpu_poll_seconds = 2.0
+gpu_poll_seconds = 5.0
+memory_poll_seconds = 2.0
+network_poll_seconds = 3.0
+disk_poll_seconds = 10.0
+
+[dock]
+enabled = false
+position = "bottom"
+icon_size = 48
+background_opacity = 1.0
+radius = 16
+margin_ends = 0
+margin_edge = 8
+shadow = true
+auto_hide = true
+reserve_space = false
+active_scale = 1.0
+inactive_scale = 0.85
+active_opacity = 1.0
+inactive_opacity = 0.6
+show_dots = false
+launcher_position = "none"
+active_monitor_only = true
+pinned = []
+
+[desktop_widgets]
+enabled = false
+
+[bar.main]
+position = "top"
+thickness = 40
+background_opacity = 0.93
+radius = 12
+margin_ends = 4
+margin_edge = 4
+margin_opposite_edge = 4
+padding = 1
+widget_spacing = 3
+scale = 1.0
+font_weight = 700
+shadow = true
+auto_hide = false
+reserve_space = true
+capsule = true
+capsule_opacity = 1.0
+capsule_radius = 12.0
+
+start = ["workspaces_v4"]
+center = ["clock_v4", "spotify_media_v4", "screenshot_v4"]
+end = ["keyboard_v4", "tray_v4", "notifications_v4", "cpu_v4", "volume_v4", "token_usage_v4", "control_v4", "updates_v4"]
+
+[widget.workspaces_v4]
+type = "workspaces"
+display = "id"
+max_label_chars = 2
+labels_only_when_occupied = true
+hide_when_empty = false
+pill_scale = 0.8
+active_pill_size = 2.2
+inactive_pill_size = 1.0
+focused_color = "primary"
+occupied_color = "secondary"
+empty_color = "secondary"
+
+[widget.clock_v4]
+type = "clock"
+format = "{:%H:%M:%S %a, %b %d}"
+vertical_format = "{:%H\n%M\n%S}"
+tooltip_format = "{:%H:%M:%S %A, %B %d}"
+font_weight = 700
+
+[widget.media_v4]
+type = "media"
+max_length = 145.0
+min_length = 80.0
+art_size = 16.0
+title_scroll = "on_hover"
+hide_when_no_media = false
+album_art_only = false
+hide_album_art = false
+hide_artist = false
+
+[widget.spotify_media_v4]
+type = "yeager/spotify-media:media"
+
+[widget.screenshot_v4]
+type = "screenshot"
+glyph = "screenshot"
+
+[widget.keyboard_v4]
+type = "keyboard_layout"
+display = "short"
+show_icon = true
+show_label = true
+hide_when_single_layout = false
+
+[widget.tray_v4]
+type = "tray"
+drawer = true
+drawer_columns = 3
+
+[widget.notifications_v4]
+type = "notifications"
+hide_when_no_unread = false
+
+[widget.cpu_v4]
+type = "sysmon"
+stat = "cpu_usage"
+display = "text"
+show_label = true
+glyph = "cpu"
+
+[widget.volume_v4]
+type = "volume"
+device = "output"
+show_label = false
+
+[widget.token_usage_v4]
+type = "yeager/token-meter:usage"
+
+[widget.control_v4]
+type = "control-center"
+glyph = "noctalia"
+
+[widget.updates_v4]
+type = "custom_button"
+glyph = "arrow-big-down-lines"
+tooltip = "Arch updates"
+command = "ghostty -e bash -lc 'echo Updating System...; paru; flatpak update; read -n 1 -p \"Press any key to exit...\"'"
+
+[control_center]
+sidebar = "full"
+# sidebar_section = "compact"  # optional; defaults to the same as sidebar
+width = 680  # full-sidebar width in pixels (600–1200)
+# hidden_tabs = ["monitor", "weather"]  # hide tabs you never use
+
+[[control_center.shortcuts]]
+type = "wifi"
+
+[[control_center.shortcuts]]
+type = "bluetooth"
+
+[[control_center.shortcuts]]
+type = "wallpaper"
+
+[[control_center.shortcuts]]
+type = "notification"
+
+[[control_center.shortcuts]]
+type = "caffeine"
+
+[[control_center.shortcuts]]
+type = "nightlight"
+
+
+[location]
+auto_locate = false            # resolve coordinates from your IP address when true
+address     = "Kazan, RU"    # geocoded when auto_locate = false and non-empty
+# latitude  = 52.5200          # manual coordinates, used when auto_locate and address are off
+# longitude = 13.4050
+
+# Custom schedule - pick your own day/night times instead of computing them:
+# custom_schedule = true
+# sunset          = "20:30"    # HH:MM - night starts
+# sunrise         = "07:30"    # HH:MM - day starts
+
+[plugins]
+enabled = ["yeager/spotify-media", "yeager/token-meter"]
+
+[[plugins.source]]
+name = "personal"
+kind = "path"
+location = "/home/yeager/.dotfiles/noctalia/plugins-v5"

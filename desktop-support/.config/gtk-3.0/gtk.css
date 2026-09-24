@@ -1,0 +1,134 @@
+@define-color accent_color #b9c9d0;
+@define-color accent_fg_color #243238;
+@define-color accent_bg_color #b9c9d0;
+
+@define-color window_bg_color #151616;
+@define-color window_fg_color #e4e2e2;
+
+@define-color headerbar_bg_color #151616;
+@define-color headerbar_fg_color #e4e2e2;
+
+@define-color popover_bg_color #1f2020;
+@define-color popover_fg_color #e4e2e2;
+
+@define-color view_bg_color #151616;
+@define-color view_fg_color #e4e2e2;
+
+@define-color card_bg_color #1b1c1c;
+@define-color card_fg_color #e4e2e2;
+
+@define-color sidebar_bg_color #151616;
+@define-color sidebar_fg_color #e4e2e2;
+@define-color sidebar_border_color #151616;
+@define-color sidebar_backdrop_color #151616;
+
+headerbar {
+    background-color: #151616;
+    box-shadow: none;
+    border-bottom: none;
+}
+
+headerbar separator {
+    background-color: transparent;
+}
+
+.nautilus-window .sidebar,
+.nautilus-window sidebar,
+placessidebar,
+placessidebar list {
+    background-color: #151616;
+    color: #e4e2e2;
+    border-right: none;
+}
+
+placessidebar row {
+    background-color: transparent;
+    color: #e4e2e2;
+}
+
+placessidebar row:hover {
+    background-color: #313435;
+}
+
+placessidebar row:selected,
+placessidebar row:selected:hover {
+    background-color: #444748;
+    color: #e4e2e2;
+}
+
+placessidebar image {
+    color: inherit;
+}
+
+.view {
+    background-color: #151616;
+}
+
+separator.sidebar {
+    background-color: transparent;
+    min-width: 0;
+}
+
+treeview.view:selected,
+.view:selected,
+list row:selected,
+listbox row:selected {
+    background-color: #444748;
+    color: #e4e2e2;
+}
+
+treeview.view:selected:hover,
+.view:selected:hover,
+list row:selected:hover,
+listbox row:selected:hover {
+    background-color: #4f5355;
+    color: #e4e2e2;
+}
+
+popover,
+popover.background {
+    background-color: #1f2020;
+    color: #e4e2e2;
+}
+
+menu,
+.context-menu,
+.popup {
+    background-color: #1f2020;
+    color: #e4e2e2;
+}
+
+menuitem {
+    color: #e4e2e2;
+}
+
+menuitem:hover,
+menuitem:selected {
+    background-color: #313435;
+}
+
+menuitem:active,
+menuitem:selected:active {
+    background-color: #444748;
+    color: #e4e2e2;
+}
+
+button:hover {
+    background-color: #313435;
+}
+
+button:active {
+    background-color: #444748;
+    color: #e4e2e2;
+}
+
+entry:focus,
+textview:focus,
+spinbutton:focus {
+    border-color: alpha(#b9c9d0, 0.60);
+    box-shadow: 0 0 0 1px alpha(#b9c9d0, 0.25) inset;
+}
+
+menu separator {
+    background-color: alpha(#e4e2e2, 0.12);
+}

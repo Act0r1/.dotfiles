@@ -15,6 +15,13 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 		vim.fn.getchar()
 		os.exit(1)
 	end
+	local lockfile = vim.fn.stdpath("config") .. "/lazy-lock.json"
+	local lock = vim.json.decode(table.concat(vim.fn.readfile(lockfile), "\n"))
+	local revision = assert(lock["lazy.nvim"].commit, "lazy.nvim commit is missing from lazy-lock.json")
+	local checkout = vim.fn.system({ "git", "-C", lazypath, "checkout", "--detach", revision })
+	if vim.v.shell_error ~= 0 then
+		error("Failed to restore pinned lazy.nvim: " .. checkout)
+	end
 end
 vim.opt.rtp:prepend(lazypath)
 

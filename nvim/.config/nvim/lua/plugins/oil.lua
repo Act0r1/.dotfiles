@@ -1,15 +1,22 @@
 return {
-	-- "stevearc/oil.nvim",
-	-- ---@module 'oil'
-	-- ---@type oil.SetupOpts
-	-- opts = {
-	--     view_options = {
-	--         show_hidden = true
-	--     }
-	-- },
-	-- -- Optional dependencies
-	-- dependencies = { { "echasnovski/mini.icons", opts = {} } },
-	-- -- dependencies = { "nvim-tree/nvim-web-devicons" }, -- use if you prefer nvim-web-devicons
-	-- -- Lazy loading is not recommended because it is very tricky to make it work correctly in all situations.
-	-- lazy = false,
+	"stevearc/oil.nvim",
+	enabled = false,
+	---@module "oil"
+	---@type oil.SetupOpts
+	opts = {
+		keymaps = {
+			["<Tab>"] = "actions.select",
+			["<C-h>"] = false,
+			["<C-l>"] = false,
+		},
+		view_options = {
+			show_hidden = true,
+		},
+	},
+	dependencies = { "nvim-mini/mini.icons" },
+	keys = {
+		{ "-", "<cmd>Oil<cr>", desc = "Open parent directory" },
+		{ "<leader>j", "<cmd>Oil<cr>", desc = "Open Oil file explorer" },
+	},
+	lazy = false,
 }

@@ -1,0 +1,200 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly model_name="ggml-large-v3-turbo.bin"
+readonly model_url="https://huggingface.co/ggerganov/whisper.cpp/resolve/main/${model_name}"
+readonly model_sha1="4af2b29d7ec73d781377bfd1758ca957a807e941"
+
+data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
+model="${WHISPER_MODEL:-$data_home/whisper.cpp/$model_name}"
+language="${WHISPER_LANGUAGE:-ru}"
+threads="${WHISPER_THREADS:-8}"
+step_ms="${WHISPER_STEP_MS:-0}"
+length_ms="${WHISPER_LENGTH_MS:-8000}"
+keep_ms="${WHISPER_KEEP_MS:-0}"
+vad_threshold="${WHISPER_VAD_THRESHOLD:-0.65}"
+capture_device="${WHISPER_CAPTURE_DEVICE:--1}"
+
+usage() {
+  cat <<'EOF'
+Usage: whisper-live [wrapper option] [whisper-stream options]
+
+Transcribe microphone audio in real time with Whisper on the NVIDIA GPU.
+Russian transcription is used by default. Press Ctrl+C to stop.
+
+Wrapper options:
+  -h, --help          Show this help
+  --doctor            Check the GPU backend, microphone and model
+  --download-model    Download and verify the default model, then exit
+  --stream-help       Show all native whisper-stream options
+
+Useful whisper-stream options:
+  -l, --language LANG     Spoken language (default: ru)
+  -c, --capture ID        Microphone ID (default: system default)
+  -f, --file PATH         Also write recognized text to a file
+  -tr, --translate        Translate recognized speech to English
+  -m, --model PATH        Use another GGML Whisper model
+
+Environment overrides:
+  WHISPER_MODEL, WHISPER_LANGUAGE, WHISPER_THREADS,
+  WHISPER_STEP_MS, WHISPER_LENGTH_MS, WHISPER_KEEP_MS,
+  WHISPER_VAD_THRESHOLD, WHISPER_CAPTURE_DEVICE
+EOF
+}
+
+require_command() {
+  local command_name="$1"
+
+  if ! command -v "$command_name" >/dev/null 2>&1; then
+    echo "whisper-live: required command is missing: $command_name" >&2
+    exit 1
+  fi
+}
+
+gpu_backend() {
+  local dependencies
+
+  dependencies="$(ldd "$(command -v whisper-stream)" 2>/dev/null || true)"
+  if grep -q 'libggml-cuda' <<<"$dependencies"; then
+    printf 'CUDA'
+  elif grep -q 'libggml-vulkan' <<<"$dependencies"; then
+    printf 'Vulkan'
+  else
+    return 1
+  fi
+}
+
+nvidia_gpu() {
+  nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | sed -n '1p'
+}
+
+download_model() {
+  local actual_sha1
+  local partial_model="${model}.part"
+
+  if [[ "$model" != "$data_home/whisper.cpp/$model_name" ]]; then
+    echo "whisper-live: automatic download is only available for the default model" >&2
+    echo "whisper-live: requested model: $model" >&2
+    exit 1
+  fi
+
+  require_command curl
+  require_command sha1sum
+  mkdir -p "$(dirname "$model")"
+
+  if [[ -r "$model" ]]; then
+    actual_sha1="$(sha1sum "$model" | cut -d ' ' -f 1)"
+    if [[ "$actual_sha1" == "$model_sha1" ]]; then
+      echo "whisper-live: model is already ready: $model" >&2
+      return
+    fi
+  fi
+
+  echo "whisper-live: downloading $model_name (about 1.5 GiB) ..." >&2
+  curl --fail --location --retry 3 --continue-at - --output "$partial_model" "$model_url"
+
+  actual_sha1="$(sha1sum "$partial_model" | cut -d ' ' -f 1)"
+  if [[ "$actual_sha1" != "$model_sha1" ]]; then
+    echo "whisper-live: model checksum mismatch" >&2
+    echo "whisper-live: expected $model_sha1, got $actual_sha1" >&2
+    exit 1
+  fi
+
+  mv "$partial_model" "$model"
+  echo "whisper-live: model ready: $model" >&2
+}
+
+doctor() {
+  local backend="unavailable"
+  local gpu="unavailable"
+  local microphone="unavailable"
+  local model_status="missing"
+
+  if backend_result="$(gpu_backend)"; then
+    backend="$backend_result"
+  fi
+  if gpu_result="$(nvidia_gpu)" && [[ -n "$gpu_result" ]]; then
+    gpu="$gpu_result"
+  fi
+  if command -v pactl >/dev/null 2>&1; then
+    microphone="$(pactl get-default-source 2>/dev/null || printf 'unavailable')"
+  fi
+  if [[ -r "$model" ]]; then
+    model_status="$model"
+  fi
+
+  printf 'whisper-stream: %s\n' "$(command -v whisper-stream 2>/dev/null || printf 'missing')"
+  printf 'GPU backend:    %s\n' "$backend"
+  printf 'NVIDIA GPU:     %s\n' "$gpu"
+  printf 'Microphone:     %s\n' "$microphone"
+  printf 'Model:          %s\n' "$model_status"
+
+  [[ "$backend" != "unavailable" && "$gpu" != "unavailable" && -r "$model" ]]
+}
+
+require_command whisper-stream
+require_command ldd
+require_command nvidia-smi
+
+passthrough_args=("$@")
+for ((index = 0; index < ${#passthrough_args[@]}; index++)); do
+  argument="${passthrough_args[index]}"
+  case "$argument" in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --doctor)
+      doctor
+      exit
+      ;;
+    --download-model)
+      download_model
+      exit 0
+      ;;
+    --stream-help)
+      exec whisper-stream --help
+      ;;
+    -m|--model)
+      if ((index + 1 >= ${#passthrough_args[@]})); then
+        echo "whisper-live: $argument requires a model path" >&2
+        exit 2
+      fi
+      model="${passthrough_args[index + 1]}"
+      ((index += 1))
+      ;;
+  esac
+done
+
+if [[ ! -r "$model" ]]; then
+  if [[ "$model" == "$data_home/whisper.cpp/$model_name" ]]; then
+    download_model
+  else
+    echo "whisper-live: model is not readable: $model" >&2
+    exit 1
+  fi
+fi
+
+if ! backend="$(gpu_backend)"; then
+  echo "whisper-live: whisper-stream has no CUDA or Vulkan GPU backend" >&2
+  exit 1
+fi
+
+if ! gpu="$(nvidia_gpu)" || [[ -z "$gpu" ]]; then
+  echo "whisper-live: NVIDIA GPU is unavailable" >&2
+  exit 1
+fi
+
+echo "whisper-live: $gpu via $backend; language=$language; Ctrl+C stops" >&2
+
+exec whisper-stream \
+  --model "$model" \
+  --language "$language" \
+  --threads "$threads" \
+  --step "$step_ms" \
+  --length "$length_ms" \
+  --keep "$keep_ms" \
+  --vad-thold "$vad_threshold" \
+  --capture "$capture_device" \
+  "${passthrough_args[@]}"

@@ -1,0 +1,27 @@
+id = "yeager/spotify-media"
+name = "Spotify Media"
+version = "1.0.0"
+plugin_api = 3
+author = "yeager"
+license = "MIT"
+dependencies = ["playerctl", "jq", "hyprctl"]
+tags = ["media", "spotify"]
+icon = "brand-spotify"
+description = "A Spotify media panel with an in-player Trash Bin action."
+
+[[service]]
+id = "media-state"
+entry = "service.luau"
+
+[[widget]]
+id = "media"
+entry = "widget.luau"
+
+[[panel]]
+id = "player"
+entry = "panel.luau"
+width = 520
+height = 430
+placement = "attached"
+position = "auto"
+open_near_click = true
