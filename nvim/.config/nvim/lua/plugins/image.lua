@@ -21,5 +21,6 @@ return {
             },
         },
         animate = { enabled = true },
+        bigfile = { enabled = true },
     },
 }
