@@ -1,0 +1,136 @@
+[mgr]
+prepend_keymap = [
+	{ on = "z", run = "plugin zoxide", desc = "Jump to a directory via zoxide" },
+	{ on = "Z", run = "plugin fzf", desc = "Jump to a file/directory via fzf" },
+	{ on = "!", run = "shell \"$SHELL\" --block", desc = "Open shell here" },
+	{ on = "y", run = [ "shell --orphan -- yazi-copy-files %s", "yank" ], desc = "Yank selected files and copy them to the clipboard" },
+	# Russian layout twins (generated)
+	{ on = "я", run = "plugin zoxide", desc = "Jump to a directory via zoxide" },
+	{ on = "Я", run = "plugin fzf", desc = "Jump to a file/directory via fzf" },
+	{ on = "й", run = "quit", desc = "Quit the process" },
+	{ on = "Й", run = "quit --no-cwd-file", desc = "Quit without outputting cwd-file" },
+	{ on = "л", run = "arrow prev", desc = "Previous file" },
+	{ on = "о", run = "arrow next", desc = "Next file" },
+	{ on = ["п", "п"], run = "arrow top", desc = "Go to top" },
+	{ on = "П", run = "arrow bot", desc = "Go to bottom" },
+	{ on = "р", run = "leave", desc = "Back to the parent directory" },
+	{ on = "д", run = "enter", desc = "Enter the child directory" },
+	{ on = "Р", run = "back", desc = "Back to previous directory" },
+	{ on = "Д", run = "forward", desc = "Forward to next directory" },
+	{ on = "м", run = "visual_mode", desc = "Enter visual mode (selection mode)" },
+	{ on = "М", run = "visual_mode --unset", desc = "Enter visual mode (unset mode)" },
+	{ on = "Л", run = "seek -5", desc = "Seek up 5 units in the preview" },
+	{ on = "О", run = "seek 5", desc = "Seek down 5 units in the preview" },
+	{ on = "щ", run = "open", desc = "Open selected files" },
+	{ on = "Щ", run = "open --interactive", desc = "Open selected files interactively" },
+	{ on = "н", run = [ "shell --orphan -- yazi-copy-files %s", "yank" ], desc = "Yank selected files and copy them to the clipboard" },
+	{ on = "ч", run = "yank --cut", desc = "Yank selected files (cut)" },
+	{ on = "з", run = "paste", desc = "Paste yanked files" },
+	{ on = "З", run = "paste --force", desc = "Paste yanked files (overwrite if the destination exists)" },
+	{ on = "Н", run = "unyank", desc = "Cancel the yank status" },
+	{ on = "Ч", run = "unyank", desc = "Cancel the yank status" },
+	{ on = "в", run = "remove", desc = "Trash selected files" },
+	{ on = "В", run = "remove --permanently", desc = "Permanently delete selected files" },
+	{ on = "ф", run = "create", desc = "Create a file (ends with / for directories)" },
+	{ on = "Ф", run = "bulk_create", desc = "Bulk create files" },
+	{ on = "к", run = "rename --cursor=before_ext", desc = "Rename selected file(s)" },
+	{ on = "ж", run = "shell --interactive", desc = "Run a shell command" },
+	{ on = "Ж", run = "shell --block --interactive", desc = "Run a shell command (block until finishes)" },
+	{ on = "ю", run = "hidden toggle", desc = "Toggle the visibility of hidden files" },
+	{ on = "ы", run = "search --via=fd", desc = "Search files by name via fd" },
+	{ on = "Ы", run = "search --via=rg", desc = "Search files by content via ripgrep" },
+	{ on = ["ь", "ы"], run = "linemode size", desc = "Linemode: size" },
+	{ on = ["ь", "з"], run = "linemode permissions", desc = "Linemode: permissions" },
+	{ on = ["ь", "и"], run = "linemode btime", desc = "Linemode: btime" },
+	{ on = ["ь", "ь"], run = "linemode mtime", desc = "Linemode: mtime" },
+	{ on = ["ь", "щ"], run = "linemode owner", desc = "Linemode: owner" },
+	{ on = ["ь", "т"], run = "linemode none", desc = "Linemode: none" },
+	{ on = ["с", "с"], run = "copy path", desc = "Copy file path" },
+	{ on = ["с", "С"], run = "copy url", desc = "Copy file URL" },
+	{ on = ["с", "в"], run = "copy dirpath", desc = "Copy directory path" },
+	{ on = ["с", "В"], run = "copy dirurl", desc = "Copy directory URL" },
+	{ on = ["с", "а"], run = "copy filename", desc = "Copy filename" },
+	{ on = ["с", "т"], run = "copy name_without_ext", desc = "Copy filename without extension" },
+	{ on = "а", run = "filter --smart", desc = "Filter files" },
+	{ on = "т", run = "find_arrow", desc = "Next found" },
+	{ on = "Т", run = "find_arrow --previous", desc = "Previous found" },
+	{ on = ["б", "ь"], run = ["sort mtime --reverse=no", "linemode mtime"], desc = "Sort by modified time" },
+	{ on = ["б", "Ь"], run = ["sort mtime --reverse=yes", "linemode mtime"], desc = "Sort by modified time (reverse)" },
+	{ on = ["б", "и"], run = ["sort btime --reverse=no", "linemode btime"], desc = "Sort by birth time" },
+	{ on = ["б", "И"], run = ["sort btime --reverse=yes", "linemode btime"], desc = "Sort by birth time (reverse)" },
+	{ on = ["б", "у"], run = "sort extension --reverse=no", desc = "Sort by extension" },
+	{ on = ["б", "У"], run = "sort extension --reverse=yes", desc = "Sort by extension (reverse)" },
+	{ on = ["б", "ф"], run = "sort alphabetical --reverse=no", desc = "Sort alphabetically" },
+	{ on = ["б", "Ф"], run = "sort alphabetical --reverse=yes", desc = "Sort alphabetically (reverse)" },
+	{ on = ["б", "т"], run = "sort natural --reverse=no", desc = "Sort naturally" },
+	{ on = ["б", "Т"], run = "sort natural --reverse=yes", desc = "Sort naturally (reverse)" },
+	{ on = ["б", "ы"], run = ["sort size --reverse=no", "linemode size"], desc = "Sort by size" },
+	{ on = ["б", "Ы"], run = ["sort size --reverse=yes", "linemode size"], desc = "Sort by size (reverse)" },
+	{ on = ["б", "к"], run = "sort random --reverse=no", desc = "Sort randomly" },
+	{ on = ["п", "р"], run = "cd ~", desc = "Go home" },
+	{ on = ["п", "с"], run = "cd ~/.config", desc = "Go to ~/.config" },
+	{ on = ["п", "в"], run = "cd ~/Downloads", desc = "Go to ~/Downloads" },
+	{ on = ["п", "е"], run = "plugin trash", desc = "Go to trash bin" },
+	{ on = ["п", "<Space>"], run = "cd --interactive", desc = "Jump interactively" },
+	{ on = ["п", "а"], run = "follow", desc = "Follow hovered symlink" },
+	{ on = ["е", "е"], run = "tab_create --current", desc = "Create a new tab in CWD" },
+	{ on = ["е", "к"], run = "tab_rename --interactive", desc = "Rename current tab" },
+	{ on = "х", run = "tab_switch -1 --relative", desc = "Switch to previous tab" },
+	{ on = "ъ", run = "tab_switch 1 --relative", desc = "Switch to next tab" },
+	{ on = "Х", run = "tab_swap -1", desc = "Swap current tab with previous tab" },
+	{ on = "Ъ", run = "tab_swap 1", desc = "Swap current tab with next tab" },
+	{ on = "ц", run = "tasks:show", desc = "Show task manager" },
+	{ on = "Ё", run = "help", desc = "Open help" },
+]
+
+[tasks]
+prepend_keymap = [
+	# Russian layout twins (generated)
+	{ on = "ц", run = "close", desc = "Close task manager" },
+	{ on = "л", run = "arrow prev", desc = "Previous task" },
+	{ on = "о", run = "arrow next", desc = "Next task" },
+	{ on = "ч", run = "cancel", desc = "Cancel the task" },
+	{ on = "Ё", run = "help", desc = "Open help" },
+]
+
+[spot]
+prepend_keymap = [
+	# Russian layout twins (generated)
+	{ on = "л", run = "arrow prev", desc = "Previous line" },
+	{ on = "о", run = "arrow next", desc = "Next line" },
+	{ on = "р", run = "swipe prev", desc = "Swipe to previous file" },
+	{ on = "д", run = "swipe next", desc = "Swipe to next file" },
+	{ on = ["с", "с"], run = "copy cell", desc = "Copy selected cell" },
+	{ on = "Ё", run = "help", desc = "Open help" },
+]
+
+[pick]
+prepend_keymap = [
+	# Russian layout twins (generated)
+	{ on = "л", run = "arrow prev", desc = "Previous option" },
+	{ on = "о", run = "arrow next", desc = "Next option" },
+	{ on = "Ё", run = "help", desc = "Open help" },
+]
+
+[confirm]
+prepend_keymap = [
+	# Russian layout twins (generated)
+	{ on = "т", run = "close", desc = "Cancel the confirm" },
+	{ on = "н", run = "close --submit", desc = "Submit the confirm" },
+	{ on = "л", run = "arrow prev", desc = "Previous line" },
+	{ on = "о", run = "arrow next", desc = "Next line" },
+	{ on = "Ё", run = "help", desc = "Open help" },
+]
+
+[cmp]
+prepend_keymap = [
+	# Russian layout twins (generated)
+	{ on = "Ё", run = "help", desc = "Open help" },
+]
+
+[help]
+prepend_keymap = [
+	# Russian layout twins (generated)
+	{ on = "л", run = "arrow prev", desc = "Previous line" },
+	{ on = "о", run = "arrow next", desc = "Next line" },
+]
