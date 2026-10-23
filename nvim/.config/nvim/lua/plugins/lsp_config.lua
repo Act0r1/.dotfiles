@@ -124,7 +124,6 @@ return {
             vim.lsp.enable("rust_analyzer")
             vim.lsp.enable("gopls")
             vim.lsp.enable("ts_ls")
-            vim.lsp.enable("zls")
             vim.lsp.enable("tailwindcss")
             vim.lsp.enable("cssls")
             vim.lsp.enable("astro")
@@ -135,6 +134,7 @@ return {
             vim.lsp.enable("taplo")
             vim.lsp.enable("marksman")
             vim.lsp.enable("terraformls")
+            vim.lsp.enable("texlab")
             -- vim.lsp.enable("ty", false)
 
             vim.api.nvim_create_user_command("LspRestart", function(args)
@@ -146,6 +146,12 @@ return {
                 callback = function(ev)
                     local opts = { buffer = ev.buf }
                     vim.bo[ev.buf].omnifunc = "v:lua.vim.lsp.omnifunc"
+
+                    local client = vim.lsp.get_client_by_id(ev.data.client_id)
+                    if client and client:supports_method("textDocument/inlayHint") then
+                        vim.api.nvim_set_hl(0, "LspInlayHint", { link = "Comment" })
+                        vim.lsp.inlay_hint.enable(true, { bufnr = ev.buf })
+                    end
 
                     vim.keymap.set("n", "gD", vim.lsp.buf.declaration, opts)
                     vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)

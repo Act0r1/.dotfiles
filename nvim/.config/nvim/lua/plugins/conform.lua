@@ -1,5 +1,6 @@
 return {
 	"stevearc/conform.nvim",
+	event = { "BufWritePre" },
 	keys = {
 		{
 			"<leader>f",
@@ -24,11 +25,9 @@ return {
 	opts = {},
 	config = function()
 		require("conform").setup({
-			-- format_on_save = {
-			--     timeout_ms = 500,
-			--     async = false,
-			--     quiet = false,
-			-- },
+			format_on_save = {
+				timeout_ms = 500,
+			},
 			formatters_by_ft = {
 				lua = { "stylua" },
 				-- Conform will run multiple formatters sequentially
@@ -39,6 +38,7 @@ return {
 				},
 				-- You can customize some of the format options for the filetype (:help conform.format)
 				go = { "gofmt" },
+				c = { "clang-format" },
 				rust = { "rustfmt", lsp_format = "fallback" },
 				-- Conform will run the first available formatter
 				typescript = {

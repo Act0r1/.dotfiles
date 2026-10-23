@@ -1,6 +1,6 @@
 return {
     "ibhagwan/fzf-lua",
-    dependencies = { "echasnovski/mini.icons" },
+    dependencies = { "nvim-mini/mini.icons" },
     keys = {
         {
             "<leader>ff",
@@ -24,6 +24,13 @@ return {
             desc = "List buffers",
         },
         {
+            "<leader>fz",
+            function()
+                require("fzf-lua").zoxide()
+            end,
+            desc = "Zoxide cd",
+        },
+        {
             "<leader>fi",
             function()
                 require("fzf-lua").lsp_implementations()
@@ -36,6 +43,13 @@ return {
                 require("fzf-lua").lsp_references()
             end,
             desc = "LSP references",
+        },
+        {
+            "<leader>ld",
+            function()
+                require("fzf-lua").lsp_document_symbols()
+            end,
+            desc = "LSP document symbols",
         },
         {
             "<leader>gd",

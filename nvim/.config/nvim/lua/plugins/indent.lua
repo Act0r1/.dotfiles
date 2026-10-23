@@ -1,5 +1,6 @@
 return {
     "lukas-reineke/indent-blankline.nvim",
+    event = { "BufReadPost", "BufNewFile" },
     main = "ibl",
     ---@module "ibl"
     ---@type ibl.config
@@ -23,5 +24,5 @@ return {
         end)
         require("ibl").setup(opts)
     end,
-    enabled = true,
+    enabled = false,
 }

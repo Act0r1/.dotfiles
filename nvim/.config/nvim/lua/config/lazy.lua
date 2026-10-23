@@ -95,7 +95,6 @@ vim.opt.clipboard = "unnamedplus"
 vim.opt.updatetime = 300
 vim.opt.timeoutlen = 500
 vim.opt.ttimeoutlen = 0
-vim.opt.ttyfast = true
 vim.opt.lazyredraw = true
 
 -- ============================================================================
@@ -134,10 +133,6 @@ vim.diagnostic.config({
 -- ============================================================================
 
 vim.g.lazygit_floating_window_winblend = 0
-
-vim.g.VM_maps = {
-	["I BS"] = "",
-}
 
 -- ============================================================================
 -- SETUP LAZY.NVIM

@@ -1,0 +1,33 @@
+{
+  "Math notes template": {
+    "prefix": "tmpl",
+    "description": "Article with Russian support and math packages",
+    "body": [
+      "\\documentclass{article}",
+      "\\usepackage[T2A]{fontenc}",
+      "\\usepackage[utf8]{inputenc}",
+      "\\usepackage[russian,english]{babel}",
+      "\\usepackage{amsmath,amssymb,amsthm}",
+      "",
+      "\\title{${1:Конспект}}",
+      "\\author{}",
+      "\\date{${CURRENT_YEAR}-${CURRENT_MONTH}-${CURRENT_DATE}}",
+      "",
+      "\\begin{document}",
+      "\\maketitle",
+      "",
+      "$0",
+      "",
+      "\\end{document}"
+    ]
+  },
+  "Set-builder notation": {
+    "prefix": "setb",
+    "description": "{ expr | x in S, condition }",
+    "body": ["\\{\\, ${1:x} \\mid ${2:x} \\in ${3:\\mathbb{Z}}${4:, } \\,\\}$0"]
+  },
+  "Natural numbers": { "prefix": "NN", "body": ["\\mathbb{N}"] },
+  "Integers": { "prefix": "ZZ", "body": ["\\mathbb{Z}"] },
+  "Rationals": { "prefix": "QQ", "body": ["\\mathbb{Q}"] },
+  "Reals": { "prefix": "RR", "body": ["\\mathbb{R}"] }
+}

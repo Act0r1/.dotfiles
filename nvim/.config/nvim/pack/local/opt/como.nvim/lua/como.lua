@@ -349,6 +349,8 @@ M.shellcmdline_complete = function(arg_lead, cmd_line, cursor_pos)
                 using_input_buffer = true
                 local ok_cursor, cursor = pcall(vim.api.nvim_win_get_cursor, 0)
                 col = ok_cursor and cursor[2] or #line
+                line = line:sub(1, col) .. (arg_lead or '')
+                col = #line
             end
         end
     end

@@ -1,11 +1,12 @@
 return {
     {
-        "folke/tokyonight.nvim",
-        lazy = false,
+        "catppuccin/nvim",
+        name = "catppuccin",
         priority = 1000,
+        opts = {
+            custom_highlights = function(c)
+                return { WinSeparator = { fg = c.surface2 } }
+            end,
+        },
     },
-    { "catppuccin/nvim",             name = "catppuccin",  priority = 1000 },
-    { "rebelot/kanagawa.nvim" },
-    { 'projekt0n/github-nvim-theme', name = 'github-theme' }
-
 }

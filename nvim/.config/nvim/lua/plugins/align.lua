@@ -4,15 +4,15 @@ return {
 	lazy = true,
 	keys = {
 		{
-			"aa",
+			"gaa",
 			function()
 				require("align").align_to_char({ length = 1 })
 			end,
-			mode = "v",
+			mode = "x",
 			desc = "Align to one character",
 		},
 		{
-			"ad",
+			"gad",
 			function()
 				require("align").align_to_char({ preview = true, length = 2 })
 			end,
@@ -20,7 +20,7 @@ return {
 			desc = "Align to two characters",
 		},
 		{
-			"aw",
+			"gaw",
 			function()
 				require("align").align_to_string({ preview = true, regex = false })
 			end,
@@ -28,7 +28,7 @@ return {
 			desc = "Align to string",
 		},
 		{
-			"ar",
+			"gar",
 			function()
 				require("align").align_to_string({ preview = true, regex = true })
 			end,

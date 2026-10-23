@@ -1,12 +1,5 @@
 return {
     {
-        "saghen/blink.compat",
-        version = "*",
-        lazy = true, -- Automatically loads when required by blink.cmp
-        opts = {},
-    },
-
-    {
         "saghen/blink.cmp",
         -- dependencies = { "rafamadriz/friendly-snippets", "Kaiser-Yang/blink-cmp-avante" },
         dependencies = { "rafamadriz/friendly-snippets" },

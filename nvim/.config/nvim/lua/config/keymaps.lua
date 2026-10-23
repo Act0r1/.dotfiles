@@ -28,10 +28,13 @@ key("n", "<leader>.", ":bnext<CR>")
 -- ============================================================================
 
 vim.opt.timeoutlen = 500
-key("n", "df", 'vaf"_d', opts)
+key("n", "df", 'vaf"_d', { remap = true, silent = true })
 key("n", ";", ":")
 key("n", "qq", ":q!<CR>")
-key("n", "<Esc>", ":noh <CR>", opts)
+key("n", "<Esc>", function()
+	vim.api.nvim_buf_clear_namespace(0, vim.api.nvim_create_namespace("nvim.multicursor"), 0, -1)
+	vim.cmd.nohlsearch()
+end, opts)
 
 -- Move by display lines through wrapped text; counts still jump real lines.
 key({ "n", "x" }, "j", "v:count == 0 ? 'gj' : 'j'", { expr = true, desc = "Down (display line)" })
@@ -45,7 +48,11 @@ key("n", ",,", "`[v`]", opts)
 
 key("n", "dl", ":g/^$/d _<CR>")
 key("n", "v'", 'vi"y')
-key("n", "zq", 'ysiw"')
+key("n", "zq", 'ysiw"', { remap = true })
+
+for _, lhs in ipairs({ "c", "C", "x", "X", "s", "S" }) do
+	key({ "n", "x" }, lhs, '"_' .. lhs, opts)
+end
 
 key({ "n", "x" }, "<leader>d", '"_d', { desc = "Delete (black hole)" })
 key({ "n", "x" }, "<leader>D", '"_D', { desc = "Delete to EOL (black hole)" })
@@ -148,40 +155,21 @@ vim.keymap.set("n", "<space>e", vim.diagnostic.open_float, { desc = "Open diagno
 -- UTILITIES
 -- ============================================================================
 
-vim.keymap.set("n", "<leader>pa", function()
-	local path = vim.fn.expand("%:p")
-	vim.fn.setreg("+", path)
-	print("file:", path)
-end)
-
-vim.keymap.set("n", "yp", function()
+local function copy_file_path()
 	local path = vim.fn.expand("%:p")
 	vim.fn.setreg("+", path)
 	print("Copied: " .. path)
-end, { desc = "Yank full file path" })
+end
 
-vim.keymap.set("n", "gp", function()
-	local path = vim.fn.expand("%:p")
-	vim.fn.setreg("+", path)
-	print("Copied: " .. path)
-end, { desc = "Copy absolute path of current file" })
+for _, lhs in ipairs({ "<leader>pa", "yp", "gp" }) do
+	key("n", lhs, copy_file_path, { desc = "Copy absolute path of current file" })
+end
 
 -- ============================================================================
 -- AUTOCMDS
 -- ============================================================================
 
 local augroup = vim.api.nvim_create_augroup("UserConfig", {})
-
-vim.api.nvim_create_autocmd("BufReadPost", {
-	group = augroup,
-	callback = function()
-		local mark = vim.api.nvim_buf_get_mark(0, '"')
-		local lcount = vim.api.nvim_buf_line_count(0)
-		if mark[1] > 0 and mark[1] <= lcount then
-			pcall(vim.api.nvim_win_set_cursor, 0, mark)
-		end
-	end,
-})
 
 vim.api.nvim_create_autocmd("BufWritePre", {
 	group = augroup,

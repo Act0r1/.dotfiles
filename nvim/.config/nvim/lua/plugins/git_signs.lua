@@ -1,5 +1,16 @@
 return {
 	"lewis6991/gitsigns.nvim",
+	event = { "BufReadPre", "BufNewFile" },
+	init = function()
+		local function highlight_blame()
+			vim.api.nvim_set_hl(0, "GitSignsCurrentLineBlame", { link = "DiagnosticInfo" })
+		end
+		vim.api.nvim_create_autocmd("ColorScheme", {
+			group = vim.api.nvim_create_augroup("GitBlameHighlight", { clear = true }),
+			callback = highlight_blame,
+		})
+		highlight_blame()
+	end,
 	opts = {
 		signs = {
 			add = { text = "┃" },
