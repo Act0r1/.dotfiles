@@ -1,7 +1,8 @@
 # ===================== базовые ENV =====================
 [[ -f "$HOME/.cargo/env" ]] && source "$HOME/.cargo/env"
 
-export EDITOR="nvim"
+export EDITOR="$HOME/.local/bin/nvim"
+alias nvim="$HOME/.local/bin/nvim"
 export LANG="en_US.UTF-8"
 ZSH_CONFIG_DIR="${${(%):-%N}:A:h}"
 # export NO_PROXY="localhost,127.0.0.1,::1"
@@ -14,11 +15,13 @@ ZSH_CONFIG_DIR="${${(%):-%N}:A:h}"
 
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
-export PATH="$HOME/.local/bin:$PATH"
+export PATH="/usr/bin:$HOME/.local/bin:$PATH"
+[[ -d "$HOME/.grok/bin" ]] && export PATH="$HOME/.grok/bin:$PATH"
 [[ -d /opt/cuda ]] && export CUDA_HOME=/opt/cuda
 # ===================== oh-my-zsh =====================
 export ZSH="${ZSH:-$HOME/.oh-my-zsh}"
 fpath=("$HOME/.local/share/zsh/site-functions" $fpath)
+[[ -d "$HOME/.grok/completions/zsh" ]] && fpath=("$HOME/.grok/completions/zsh" $fpath)
 ZSH_THEME=""  # используем starship
 
 plugins=(
@@ -88,11 +91,21 @@ if [[ $- == *i* ]] && [ -t 1 ]; then
   zle -N fzf_code_open
   bindkey '^o' fzf_code_open
 
-  # Strip leading/trailing whitespace from pasted text only
+  # Quote a pasted existing path when it forms a whole argument
   bracketed-paste() {
-    zle .bracketed-paste
-    BUFFER="${BUFFER#"${BUFFER%%[![:space:]]*}"}"  # strip leading
-    BUFFER="${BUFFER%"${BUFFER##*[![:space:]]}"}"  # strip trailing
+    local pasted candidate probe
+    local -a tokens
+    zle .bracketed-paste pasted || return
+    candidate="$pasted"
+    [[ "$candidate" == '~/'* ]] && candidate="$HOME/${candidate#\~/}"
+    probe="${LBUFFER}__paste_argument__"
+    tokens=("${(z)probe}")
+    if [[ ( -e "$candidate" || -L "$candidate" ) &&
+          "${tokens[-1]}" == __paste_argument__ &&
+          ( -z "$RBUFFER" || "$RBUFFER" == [[:space:]]* ) ]]; then
+      pasted="${(q)candidate}"
+    fi
+    LBUFFER+="$pasted"
   }
   zle -N bracketed-paste
 
@@ -165,7 +178,7 @@ alias dl='docker_logs_follow'
 alias nf='fzf_code_open'
 alias kk="ps -ef | fzf --multi | awk '{print \$2}' | xargs kill -9"
 alias n="nvim"
-alias nz="nvim ~/.dotfiles/zsh/.zshrc"
+alias nz="nvim ~/.zshrc"
 alias sz="exec zsh"
 alias b="bat --theme=Dracula"
 alias ls="eza --icons"
@@ -205,8 +218,9 @@ alias -g L='| less'
 alias -g H='| head'
 alias -g T='| tail'
 alias oc="opencode"
-alias glo='brave "$(git remote get-url origin | sed "s|git@||;s|\.git$||;s|:|/|")"'
-alias glm='brave "https://$(git remote get-url origin | sed "s|git@||;s|\.git$||;s|:|/|")/-/merge_requests/new?merge_request%5Bsource_branch%5D=$(git branch --show-current)"'
+alias j="just"
+alias glo='argon "$(git remote get-url origin | sed -E "s|^(ssh://)?git@([^:/]+)[:/]|https://\2/|; s|\.git$||")"'
+alias glm='argon "$(git remote get-url origin | sed -E "s|^(ssh://)?git@([^:/]+)[:/]|https://\2/|; s|\.git$||")/-/merge_requests/new?merge_request%5Bsource_branch%5D=$(git branch --show-current)"'
 alias code="vscodium"
 alias gpw="rbw list | fzf | xargs rbw get W"
 alias csx="codex -s danger-full-access"
@@ -261,7 +275,7 @@ unset pnpm_path
 
 export INIR_VENV="${XDG_STATE_HOME:-$HOME/.local/state}/quickshell/.venv"
 export ILLOGICAL_IMPULSE_VIRTUAL_ENV="$INIR_VENV"
-if [[ -o interactive && -t 1 && -r "${XDG_STATE_HOME:-$HOME/.local/state}/quickshell/user/generated/terminal/sequences.txt" ]]; then
+if [[ -o interactive && -t 1 && ":${${XDG_CURRENT_DESKTOP:-${XDG_SESSION_DESKTOP:-}}:l}:" == *:niri:* && -r "${XDG_STATE_HOME:-$HOME/.local/state}/quickshell/user/generated/terminal/sequences.txt" ]]; then
   cat "${XDG_STATE_HOME:-$HOME/.local/state}/quickshell/user/generated/terminal/sequences.txt"
 fi
 
@@ -298,3 +312,5 @@ for plugin_file in \
     break
   fi
 done
+
+[[ -r "${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/rashell/scripts/zsh-theme.zsh" ]] && source "${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/rashell/scripts/zsh-theme.zsh"
